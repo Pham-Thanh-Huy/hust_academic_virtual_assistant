@@ -1,7 +1,7 @@
 from app.config.chroma_config import init_chroma_db
 from app.config.mysql_config import init_mysql_db
 from app.utils.constants import Constant
-from app.utils.open_ai_util import init_open_ai
+from app.utils.open_ai_util import init_open_ai, embedding_open_ai
 
 client = init_open_ai()
 
@@ -19,7 +19,7 @@ def process_course():
     data = embedding_course_batch(texts)
     embeddings = [dt.embedding for dt in data]
 
-    course_collection, client = init_chroma_db(Constant.EMBEDDING.COURSE_EMBEDDING)
+    course_collection, client = init_chroma_db(Constant.EMBEDDING.COURSE_EMBEDDING, "localhost", 8123)
 
     # ---- batch embedding (chromadb cannot save ? 5464 token ) ----
     max_batch_size = 5000
@@ -81,12 +81,8 @@ def embedding_course_batch(all_texts, chunk_size=100):
 
     for i in range(0, len(all_texts), chunk_size):
         chunk = all_texts[i:i + chunk_size]
-        res = client.embeddings.create(
-            model="text-embedding-3-large",
-            input=chunk
-        )
-        all_embeddings.extend(res.data)
-
+        embeddings = embedding_open_ai(chunk)
+        all_embeddings.extend(embeddings)
     return all_embeddings
 
 """
