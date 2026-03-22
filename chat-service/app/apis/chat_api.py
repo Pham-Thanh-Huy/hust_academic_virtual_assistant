@@ -7,6 +7,11 @@ chat_router = APIRouter()
 import app.services.chat_service as chat_service
 
 @chat_router.post("/chats")
-async def chat(request: ChatRequest):
-    res = chat_service.chat(request.question, request.question)
+async def chat(input: ChatRequest):
+    res = chat_service.chat(input)
     return JSONResponse(content=res, status_code= res.get("status").get("code"))
+
+@chat_router.post("/standardization-question")
+async def standardization(input: ChatRequest):
+    res = chat_service.standardization_question(input)
+    return JSONResponse(content=res, status_code=res.get("status").get("code"))
