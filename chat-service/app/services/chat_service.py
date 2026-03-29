@@ -43,9 +43,9 @@ def chat(input: ChatRequest) -> dict:
         }
 
 """
-    standardization question(course) by user
+    standardization voice question (course) by user
 """
-def standardization_question(input: ChatRequest):
+def standardization_voice_question(input: ChatRequest):
     try:
         # GET PROMPT
         with open(f"{FILE_DIR.parents[2]}/prompt/standardization.txt", "r") as file:
@@ -55,7 +55,9 @@ def standardization_question(input: ChatRequest):
 
         res = client.responses.create(
             model=input.model,
-            input=prompt
+            temperature=0,
+            input=prompt,
+
         )
 
         return {

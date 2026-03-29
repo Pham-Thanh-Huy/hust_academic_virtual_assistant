@@ -19,7 +19,7 @@ def process_course():
     data = embedding_course_batch(texts)
     embeddings = [dt.embedding for dt in data]
 
-    course_collection, client = init_chroma_db(Constant.EMBEDDING.COURSE_EMBEDDING, "localhost", 8123)
+    course_collection, client = init_chroma_db()
 
     # ---- batch embedding (chromadb cannot save ? 5464 token ) ----
     max_batch_size = 5000
@@ -51,7 +51,7 @@ def process_course():
     }
 
 def get_course():
-    mydb = init_mysql_db("localhost", 3307, "root", "root", "hust_assistant_data")
+    mydb = init_mysql_db()
     cursor = mydb.cursor(dictionary=True)
 
     cursor.execute("SELECT * FROM course")
