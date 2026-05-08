@@ -9,10 +9,10 @@ from app.utils.open_ai_util import embedding_open_ai
 
 def query_vector_database_course(input: str) -> dict[str]:
     try:
-        collection, client = init_chroma_db(Constant.EMBEDDING.COURSE_EMBEDDING)
+        collection, client = init_chroma_db()
         data = embedding_open_ai(input)
 
-        embeddings =np.array([data[0].embedding], dtype=float)
+        embeddings = np.array([data[0].embedding], dtype=float)
         print("Query dim =", len(data[0].embedding))
 
         data = collection.query(

@@ -3,7 +3,7 @@ import mysql.connector
 from app.config.load_env import Env
 
 
-def init_mysql_db(host, port, user, password, database):
+def init_mysql_db():
     mydb = mysql.connector.connect(
         host=Env.Mysql.host,
         port=Env.Mysql.port,
