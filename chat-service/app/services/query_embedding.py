@@ -18,7 +18,7 @@ def query_vector_database_course(input: str) -> dict[str]:
         data = collection.query(
             query_embeddings=embeddings,
         )
-        print(data)
+        return data.get("documents")
 
     except Exception as e:
         logging.error(f"[ERROR-QUERY-VECTOR-DB-COURSE] {e}")

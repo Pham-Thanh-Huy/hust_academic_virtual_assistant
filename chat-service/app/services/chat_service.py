@@ -14,6 +14,7 @@ FILE_DIR = Path(__file__).absolute()
 def chat(input: ChatRequest) -> dict:
     try:
         courses = query_vector_database_course(input.question)
+        print(courses)
 
         # GET PROMPT
         with open(f"{FILE_DIR.parents[2]}/prompt/course.txt", "r") as file:
@@ -29,7 +30,7 @@ def chat(input: ChatRequest) -> dict:
         return {
             "data": res.output_text,
             "status": {
-                "message": "Sucess!",
+                "message": "Success!",
                 "code": 200
             }
         }
@@ -45,19 +46,21 @@ def chat(input: ChatRequest) -> dict:
 """
     standardization voice question (course) by user
 """
-def standardization_voice_question(input: ChatRequest):
+def standardization_voice_question(input: str):
     try:
         # GET PROMPT
         with open(f"{FILE_DIR.parents[2]}/prompt/standardization.txt", "r") as file:
             template = file.read()
 
-        prompt = template.format(question=input.question)
+        prompt = template.format(question=input["question"])
+
+        # Fix cứng dùng model free
+        model = "gpt-3.5-turbo"
 
         res = client.responses.create(
-            model=input.model,
+            model=model,
             temperature=0,
-            input=prompt,
-
+            input=prompt
         )
 
         return {

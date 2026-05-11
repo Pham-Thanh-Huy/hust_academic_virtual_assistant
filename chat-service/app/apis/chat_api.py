@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
 
 from app.requests.chat_request import ChatRequest
@@ -12,6 +12,6 @@ async def chat(input: ChatRequest):
     return JSONResponse(content=res, status_code= res.get("status").get("code"))
 
 @chat_router.post("/standardization-voice-question")
-async def standardization(input: ChatRequest):
-    res = chat_service.standardization_question(input)
+async def standardization(input: dict = Body(...)):
+    res = chat_service.standardization_voice_question(input)
     return JSONResponse(content=res, status_code=res.get("status").get("code"))

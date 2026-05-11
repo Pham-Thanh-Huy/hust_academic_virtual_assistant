@@ -22,7 +22,7 @@ def process_course():
     course_collection, client = init_chroma_db()
 
     # ---- batch embedding (chromadb cannot save ? 5464 token ) ----
-    max_batch_size = 5000
+    max_batch_size = 100
 
     ids_list = [str(r.get("id")) for r in result]
 

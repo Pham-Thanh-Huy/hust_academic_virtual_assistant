@@ -8,7 +8,7 @@ class Env:
     class Chroma:
         collection=os.getenv("CHROMA_COLLECTION")
         host=os.getenv("CHROMA_HOST")
-        port=os.getenv("CHROMA_PORT")
+        port=int(os.getenv("CHROMA_PORT", 8000))
 
     class Mysql:
         host=os.getenv("MYSQL_HOST")
