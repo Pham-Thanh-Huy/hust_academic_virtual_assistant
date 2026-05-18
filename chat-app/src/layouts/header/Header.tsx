@@ -2,11 +2,11 @@ import './Header.style.css'
 import {FiBell} from "react-icons/fi";
 import {FiSidebar} from "react-icons/fi";
 
-export const Header = () => {
+export const Header = ({onToggleSidebar}: {onToggleSidebar: () => void}) => {
     return (
         <div id={"header"}>
             <div  >
-                <FiSidebar  className={"header__toggle-sidebar"}  size={34} />
+                <FiSidebar onClick={onToggleSidebar}  className={"header__toggle-sidebar"}  size={34} />
             </div>
             <div className={"header__logo"}>
                 <img src="/hust-logo.svg" alt=""/>
