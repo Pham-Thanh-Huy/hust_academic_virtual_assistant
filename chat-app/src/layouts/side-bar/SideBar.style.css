@@ -1,0 +1,246 @@
+.sidebar-container {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo {
+    padding: 20px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    flex-shrink: 1;
+}
+
+.logo__img {
+    width: 48px;
+    height: 48px;
+
+    object-fit: contain;
+
+    flex-shrink: 0;
+}
+
+.logo__text {
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.logo__text h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+
+    color: rgb(154 0 31);
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logo__text p {
+    margin: 2px 0 0;
+
+    font-size: 12px;
+    color: #777;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+/* =========================
+   HISTORY CHAT
+========================= */
+
+.history-chat {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+.history-chat__top {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+}
+.history-chat__new-chat {
+    border-radius: 5px;
+    font-weight: 600;
+    background-color: rgb(154 0 31);
+    color: white;
+    margin: 10px;
+    padding: 10px 0;
+    width: 95%;
+
+}
+
+.history-chat__new-chat span {
+    font-weight: bold;
+    margin: 5px;
+}
+
+.search-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 95%;
+    margin: 0 auto;
+}
+
+.history-chat__search {
+    width: 100%;
+    padding: 10px 4px;
+    margin: 10px;
+    font-size: 0.875rem;
+    color: #888;
+    border-radius: 8px;
+    border: 1px solid rgb(228 189 188 / 0.2);
+    background-color: rgb(255 248 247);
+    outline: none;
+}
+
+.history-chat__search:focus {
+    border: 2px solid rgb(154 0 31);;
+    color: black;
+}
+
+.history-chat__icon-search {
+    font-weight: 100;
+    position: absolute;
+    right: 30px;
+    color: gray;
+}
+
+.history-chat__list-history {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* width scrollbar */
+.history-chat__list-history::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* track (nền) */
+.history-chat__list-history::-webkit-scrollbar-track {
+    background: rgba(154, 0, 31, 0.15);
+    border-radius: 10px;
+}
+
+/* thumb (phần kéo) */
+.history-chat__list-history::-webkit-scrollbar-thumb {
+    background: rgba(154, 0, 31, 0.6);
+    border-radius: 10px;
+}
+
+/* hover thumb */
+.history-chat__list-history::-webkit-scrollbar-thumb:hover {
+    background: rgba(154, 0, 31, 0.85);
+}
+
+
+
+
+.history-chat__list-history h3 {
+    color: rgb(92 64 63);
+    letter-spacing: 0.1em;
+    font-weight: inherit;
+    font-size: 8px;
+    margin-bottom: 10px;
+}
+
+
+.history-chat__list-history__button {
+    display: flex;
+    background: none;
+    padding: 15px;
+    border: none;
+    outline: none;
+}
+
+.history-chat__list-history__button:focus {
+    border: none;
+    outline: none;
+}
+.history-chat__list-history__button:hover {
+   border: none;
+    background-color: #FADBDA;
+    transition: all 0.3s ease;
+}
+
+.history-chat__list-history__button:hover  p{
+    color: rgb(154 0 31);
+}
+
+.history-chat__list-history__button:hover .history-chat__list-history__button__icon{
+    color: rgb(154 0 31);
+}
+
+.history-chat__list-history__button__icon{
+    font-size: 16px;
+    align-self: center;
+    color: black;
+    flex-shrink: 0;
+}
+
+.history-chat__list-history__history__button__icon__text {
+    margin: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgb(40 23 23);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* =========================
+   BOTTOM / INFO USER
+========================= */
+
+.info-user {
+    border-top: 1px solid rgb(228 189 188 / 0.3);
+    margin-top: auto;
+    padding-top: 20px;
+    padding-bottom: 15px;
+    /*border-top: 1px solid rgb(228 189 188 / 0.3);*/
+
+    flex-shrink: 0;
+    display: flex;
+}
+
+.info-user__icon{
+    margin: 3px 0 0 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 40px;
+}
+
+.info-user__email,
+.info-user__name{
+    margin: 0 10px;
+    color: grey;
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+

@@ -1,0 +1,48 @@
+#header{
+    display: flex;
+    justify-content: space-between;
+}
+
+
+.header__toggle-sidebar{
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: rgb(154 0 31);
+    padding: 5px;
+    margin: 20px;
+    stroke: currentColor;
+
+}
+
+.header__toggle-sidebar:hover{
+    background-color: rgb(154 0 31);
+    border-radius: 4px;
+    color: white;
+}
+
+
+.header__logo{
+    display: none;
+}
+.header__logo img{
+    width: 48px;
+    height: 48px;
+    margin: 10px;
+}
+
+
+.header__information__bell-icon{
+    margin: 20px;
+    padding: 5px;
+    color: rgb(154 0 31);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.header__information__bell-icon:hover{
+    background-color: rgb(154 0 31);
+    border-radius: 4px;
+    color: white;
+}
+
+
