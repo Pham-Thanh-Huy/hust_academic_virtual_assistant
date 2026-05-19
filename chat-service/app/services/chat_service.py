@@ -14,40 +14,45 @@ client = init_open_ai()
 FILE_DIR = Path(__file__).absolute()
 
 
-async def chat(web_socket: WebSocket, input: ChatRequest) -> dict:
+async def chat(web_socket: WebSocket) -> dict:
     try:
-        courses = query_vector_database_course(input.question)
+        await web_socket.accept()
+        while True:
+            data =  await web_socket.receive_json()
+            input = ChatRequest(**data)
+            courses = query_vector_database_course(input.question)
 
-        # GET PROMPT
-        with open(f"{FILE_DIR.parents[2]}/prompt/course.txt", "r") as file:
-            template = file.read()
+            # GET PROMPT
+            with open(f"{FILE_DIR.parents[2]}/prompt/course.txt", "r") as file:
+                template = file.read()
 
-        prompt = template.format(course=courses, question=input.question)
+            prompt = template.format(course=courses, question=input.question)
 
-        stream = client.responses.create(
-            model=input.model,
-            input=prompt,
-            stream=True
-        )
+            stream = client.responses.create(
+                model=input.model,
+                input=prompt,
+                stream=True
+            )
 
-        for chunk in stream:
-            if chunk.type == "response.output_text.delta":
-                await web_socket.send_json({
-                    "type": "chunk",
-                    "data": chunk.delta,
+            for chunk in stream:
+                if chunk.type == "response.output_text.delta":
+                    await web_socket.send_json({
+                        "type": "chunk",
+                        "data": chunk.delta,
+                        "status": {
+                            "message": "Success",
+                            "code": 200
+                        }
+                    })
+
+            await web_socket.send_json(
+                {
+                    "type": "done",
                     "status": {
-                        "message": "Success",
+                        "message": "Done!",
                         "code": 200
                     }
                 })
-
-        await web_socket.send_json(
-            {
-                "status": {
-                    "message": "Done!",
-                    "code": 200
-                }
-            })
 
     except Exception as e:
         logging.error(f"[ERROR-CHAT] {e}")

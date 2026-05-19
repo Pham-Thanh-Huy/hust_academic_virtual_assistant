@@ -12,14 +12,7 @@ import app.services.chat_service as chat_service
 
 @chat_router.websocket("/chats")
 async def chat(web_socket: WebSocket):
-    await web_socket.accept()
-    try:
-        while True:
-            data =  await web_socket.receive_json()
-            input = ChatRequest(**data)
-            await chat_service.chat(web_socket, input)
-    except WebSocketDisconnect:
-        logging.info("Disconnect websocket")
+    await chat_service.chat(web_socket)
 
 
 @chat_router.post("/standardization-voice-question")
