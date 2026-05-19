@@ -17,6 +17,22 @@ export const HomePage = () => {
         }
     }, []);
 
+
+    useEffect(() => {
+
+        const ws = new WebSocket("ws://localhost:1923/api/v1/chats");
+
+        ws.onopen = () => console.log("✅ WS CONNECTED");
+        ws.onerror = (e) => console.log("❌ WS ERROR", e);
+        ws.onclose = () => console.log("🔴 WS CLOSED");
+
+
+
+        return () => {
+            // Không đóng WS ở đây để tránh bị đóng sớm
+        };
+    }, []);
+
     const toggleSidebar = () => {
         setSidebarOpen(prev => !prev);
     };
