@@ -1,5 +1,6 @@
 import httpx
 from openai import OpenAI
+from openai import AsyncOpenAI
 
 
 def init_open_ai():
@@ -8,6 +9,14 @@ def init_open_ai():
     )
 
     client = OpenAI(http_client=client)
+    return client
+
+
+def init_async_open_ai():
+    http_client = httpx.AsyncClient(
+        verify=False
+    )
+    client = AsyncOpenAI(http_client=http_client)
     return client
 
 """

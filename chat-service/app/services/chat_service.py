@@ -1,12 +1,14 @@
 import logging
+import uuid
 from pathlib import Path
 
-from fastapi import WebSocket;
+from fastapi import WebSocket
 
 from app.requests.chat_request import ChatRequest
 from app.services.query_embedding import query_vector_database_course
 from app.utils.constants import Constant
-from app.utils.open_ai_util import init_open_ai
+from app.utils.open_ai_util import init_open_ai, init_async_open_ai
+import aiofiles
 
 client = init_open_ai()
 
@@ -16,29 +18,33 @@ FILE_DIR = Path(__file__).absolute()
 
 async def chat(web_socket: WebSocket) -> dict:
     try:
+        client_async = init_async_open_ai();
         await web_socket.accept()
         while True:
             data =  await web_socket.receive_json()
             input = ChatRequest(**data)
             courses = query_vector_database_course(input.question)
-
+            # chat_id = new c
             # GET PROMPT
-            with open(f"{FILE_DIR.parents[2]}/prompt/course.txt", "r") as file:
-                template = file.read()
+            async with aiofiles.open(f"{FILE_DIR.parents[2]}/prompt/course.txt", "r") as file:
+                template = await file.read()
 
             prompt = template.format(course=courses, question=input.question)
 
-            stream = client.responses.create(
+            messageId = uuid.uuid4().__str__()
+
+            stream = await client_async.responses.create(
                 model=input.model,
                 input=prompt,
                 stream=True
             )
 
-            for chunk in stream:
+            async for chunk in stream:
                 if chunk.type == "response.output_text.delta":
                     await web_socket.send_json({
                         "type": "chunk",
                         "data": chunk.delta,
+                        "message_id": messageId,
                         "status": {
                             "message": "Success",
                             "code": 200
@@ -67,8 +73,6 @@ async def chat(web_socket: WebSocket) -> dict:
 """
     standardization voice question (course) by user
 """
-
-
 def standardization_voice_question(input: str):
     try:
         # GET PROMPT
