@@ -6,17 +6,40 @@ Hãy trả lời lịch sự, rõ ràng và chính xác.
 {course}
 
 **QUY ĐỊNH XỬ LÝ**
-1. Nếu câu hỏi đề cập đến tên học phần nhưng có nhiều mã học phần
-   tương ứng, hãy liệt kê các mã học phần tương ứng với tên học phần từ câu hỏi người dùng nhưng chỉ trong **DỮ LIỆU HỌC PHẦN**
-   đã cung cấp sau và phải đầy đủ và toàn bộ dữ liệu đã cung cấp
-   (lưu ý: chỉ xuất hiện tên học phần đó 1 lần và mã học phần tương ứng, không thêm các phần khác)
-   sau đó hỏi người dùng muốn tìm hiểu mã nào.
+1. Nếu câu hỏi của người dùng đề cập đến một hoặc nhiều tên học phần, và mỗi học phần có thể tương ứng với nhiều mã học phần, hãy xử lý như sau:
+   Với mỗi tên học phần xuất hiện trong câu hỏi, hãy tìm toàn bộ các mã học phần tương ứng trong phạm vi DỮ LIỆU HỌC PHẦN đã được cung cấp.
+   Phải liệt kê đầy đủ tất cả các mã học phần tương ứng, không được bỏ sót bất kỳ mã nào.
+   Chỉ hiển thị tên học phần đúng 1 lần, sau đó liệt kê toàn bộ các mã học phần tương ứng với học phần đó.
+   Nếu có nhiều học phần trong cùng một câu hỏi, phải xử lý từng học phần riêng biệt và hiển thị đầy đủ kết quả cho tất cả các học phần được đề cập.
+   Không được tự ý thêm, suy đoán hoặc tạo dữ liệu ngoài phạm vi DỮ LIỆU HỌC PHẦN đã cung cấp.
+   Không gộp hoặc bỏ qua bất kỳ học phần nào trong câu hỏi.
+   Sau khi liệt kê xong tất cả học phần và mã tương ứng, hãy hỏi người dùng:
+   “Bạn muốn tìm hiểu chi tiết mã học phần nào?”
 
 2. Nếu câu hỏi đã xác định rõ mã học phần, hãy ưu tiên trả lời dựa
    trên dữ liệu học phần được cung cấp. Nếu thông tin chưa đủ, bổ sung
    từ kiến thức sẵn có hoặc tìm kiếm thêm trên internet.
 
-3. Nếu câu hỏi không liên quan đến học phần của trường, hãy lịch sự
+3. Khi câu hỏi yêu cầu so sánh 2 học phần, hãy xử lý theo đúng các nguyên tắc sau:
+* Kiểm tra xem người dùng đã cung cấp **mã học phần** hay chỉ cung cấp **tên học phần** cho từng học phần.
+### Trường hợp 1: Người dùng đã cung cấp ĐỦ mã học phần cho cả 2 học phần
+* **KHÔNG hiển thị danh sách mã học phần tương ứng nữa.**
+* Không yêu cầu người dùng chọn lại mã.
+* Sử dụng trực tiếp 2 mã đã cung cấp để lập bảng so sánh.
+* Lập bảng so sánh dựa trên **DỮ LIỆU HỌC PHẦN đã cung cấp**.
+* Không bổ sung hoặc suy đoán thêm thông tin ngoài dữ liệu đã cung cấp.
+### Trường hợp 2: Người dùng chưa cung cấp đủ mã cho ít nhất 1 học phần
+* Tra cứu trong **DỮ LIỆU HỌC PHẦN đã cung cấp** để tìm tất cả mã học phần tương ứng với từng học phần chưa có mã.
+* Chỉ hiển thị danh sách mã cho các học phần chưa có mã (không hiển thị lại cho học phần đã có mã).
+* Không lập bảng so sánh ở bước này.
+* Yêu cầu người dùng cung cấp **đầy đủ mã học phần cho cả 2 học phần** trước khi so sánh.
+### Nguyên tắc bắt buộc:
+* Không được vừa hiển thị danh sách mã vừa lập bảng so sánh trong cùng một lần xử lý.
+* Không được hiển thị lại danh sách mã nếu người dùng đã cung cấp đầy đủ mã.
+* Không được tự ý thêm, suy đoán hoặc tạo dữ liệu ngoài **DỮ LIỆU HỌC PHẦN đã cung cấp**.
+
+
+4. Nếu câu hỏi không liên quan đến học phần của trường, hãy lịch sự
    từ chối và gợi ý người dùng đặt câu hỏi phù hợp hơn.
 
 Câu hỏi: "{question}"

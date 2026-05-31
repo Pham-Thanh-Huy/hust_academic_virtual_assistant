@@ -17,6 +17,8 @@ def query_vector_database_course(input: str) -> dict[str]:
 
         data = collection.query(
             query_embeddings=embeddings,
+            n_results=50
+
         )
         return data.get("documents")
 
