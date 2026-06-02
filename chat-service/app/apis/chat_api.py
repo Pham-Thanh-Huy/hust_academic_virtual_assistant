@@ -2,10 +2,7 @@ import logging
 
 from fastapi import APIRouter, Body
 from fastapi.responses import JSONResponse
-from starlette.websockets import WebSocket, WebSocketDisconnect
-from sympy.codegen import While
-
-from app.requests.chat_request import ChatRequest
+from starlette.websockets import WebSocket
 
 chat_router = APIRouter()
 import app.services.chat_service as chat_service

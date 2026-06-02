@@ -18,7 +18,7 @@ FILE_DIR = Path(__file__).absolute()
 
 async def chat(web_socket: WebSocket) -> dict:
     try:
-        client_async = init_async_open_ai();
+        client_async = init_async_open_ai()
         await web_socket.accept()
         while True:
             data =  await web_socket.receive_json()
@@ -31,20 +31,24 @@ async def chat(web_socket: WebSocket) -> dict:
 
             prompt = template.format(course=courses, question=input.question)
 
-            messageId = uuid.uuid4().__str__()
+            params = {
+                "model": input.model,
+                "input": prompt,
+                "stream": True,
+            }
+            if input.previous_response_id:
+                params["previous_response_id"] = input.previous_response_id
 
-            stream = await client_async.responses.create(
-                model=input.model,
-                input=prompt,
-                stream=True
-            )
+            stream = await client_async.responses.create(**params)
+
 
             async for chunk in stream:
+                print(chunk)
                 if chunk.type == "response.output_text.delta":
                     await web_socket.send_json({
                         "type": "chunk",
                         "data": chunk.delta,
-                        "message_id": messageId,
+                        "response_id": chunk.item_id,
                         "status": {
                             "message": "Success",
                             "code": 200

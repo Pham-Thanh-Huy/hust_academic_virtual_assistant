@@ -3,6 +3,8 @@ from openai import OpenAI
 from openai import AsyncOpenAI
 
 
+
+
 def init_open_ai():
     client = httpx.Client(
         verify=False

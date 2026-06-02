@@ -13,11 +13,11 @@ def query_vector_database_course(input: str) -> dict[str]:
         data = embedding_open_ai(input)
 
         embeddings = np.array([data[0].embedding], dtype=float)
-        print("Query dim =", len(data[0].embedding))
+        # print("Query dim =", len(data[0].embedding))
 
         data = collection.query(
             query_embeddings=embeddings,
-            n_results=50
+            n_results=5
 
         )
         return data.get("documents")
