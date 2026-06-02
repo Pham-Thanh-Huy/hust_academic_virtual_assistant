@@ -90,7 +90,7 @@ export const HomePage = () => {
         setDisableSendMessage(true)
 
         socketRef.current?.send(JSON.stringify({
-            model: "gpt-4o-mini",
+            model: "gpt-5.4-mini",
             question: messageInput
         }));
 
@@ -182,7 +182,7 @@ export const HomePage = () => {
                             />
 
                             <button type="submit" className="send-btn" disabled={disableSendMessage}>
-                                <FiSend size={34}/>‹
+                                <FiSend size={34}/>
                             </button>
                         </form>
                     </div>
