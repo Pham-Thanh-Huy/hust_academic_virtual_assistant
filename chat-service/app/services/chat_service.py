@@ -1,5 +1,4 @@
 import logging
-import uuid
 from pathlib import Path
 
 from fastapi import WebSocket
@@ -41,6 +40,7 @@ async def chat(web_socket: WebSocket) -> dict:
 
             stream = await client_async.responses.create(**params)
 
+            current_response_id = None
 
             async for chunk in stream:
                 print(chunk)
@@ -48,16 +48,19 @@ async def chat(web_socket: WebSocket) -> dict:
                     await web_socket.send_json({
                         "type": "chunk",
                         "data": chunk.delta,
-                        "response_id": chunk.item_id,
+                        # "response_id": chunk.id,
                         "status": {
                             "message": "Success",
                             "code": 200
                         }
                     })
+                if chunk.type == "response.completed":
+                    current_response_id = chunk.response.id
 
             await web_socket.send_json(
                 {
                     "type": "done",
+                    "current_context_chat_id": current_response_id,
                     "status": {
                         "message": "Done!",
                         "code": 200
