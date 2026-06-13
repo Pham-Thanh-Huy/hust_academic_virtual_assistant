@@ -10,7 +10,7 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:mysql://mysql-container:3306/hust_assistant
+    url: jdbc:mysql://mysql-container:3306/hust_assistant_access_control
     username: root
     password: root
   jpa:
