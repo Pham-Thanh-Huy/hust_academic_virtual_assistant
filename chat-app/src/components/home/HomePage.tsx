@@ -90,12 +90,11 @@ export const HomePage = () => {
         setDisableSendMessage(true)
 
         socketRef.current?.send(JSON.stringify({
-            model: "gpt-5.4-mini",
+            model: "gpt-4o-mini", // dùng gpt 5.4 mini
             question: messageInput
         }));
 
         setListMessage(prev => [...prev, {
-            messageId: crypto.randomUUID(),
             question: messageInput,
             answer: "",
             streaming: true,
@@ -135,7 +134,7 @@ export const HomePage = () => {
                         {listMessage.length > 0 && (
                             <div className="main__box-chat__list-chat__message">
                                 {listMessage.map((msg) => (
-                                    <div key={msg.messageId}>
+                                    <div key={crypto.randomUUID()}>
                                         {/* USER */}
                                         <div className="main__box-chat__list-chat__message__human-message">
                                             <p className="human-message">
@@ -150,7 +149,7 @@ export const HomePage = () => {
                                                     {msg.answer}
                                                 </ReactMarkdown>
                                                 {msg.streaming && (
-                                                    <span className="typing">
+                                                    <span style={{marginTop: '18px', marginRight: '2px'}} className="typing">
                                                         <span className="dot"></span>
                                                         <span className="dot"></span>
                                                         <span className="dot"></span>
