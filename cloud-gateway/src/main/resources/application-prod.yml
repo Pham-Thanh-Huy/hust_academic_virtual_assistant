@@ -14,10 +14,10 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8671/eureka/
+      defaultZone: http://hust-assistant-eureka-server:8671/eureka/
 
 application:
   service:
     authen-service:
-      url: http://authen-service:8081
+      url: http://hust-assistant-authen-service:8081
       name: authen-service
