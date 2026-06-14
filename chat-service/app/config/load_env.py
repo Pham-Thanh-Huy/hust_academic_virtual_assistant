@@ -16,3 +16,9 @@ class Env:
         user=os.getenv("MYSQL_USER")
         password=os.getenv("MYSQL_PASSWORD")
         database=os.getenv("MYSQL_DATABASE")
+
+    class Eureka:
+        server=os.getenv("EUREKA_SERVER")
+        app_name=os.getenv("EUREKA_APP_NAME")
+        instance_port=int(os.getenv("EUREKA_INSTANCE_PORT", 8671))
+        instance_host=os.getenv("EUREKA_INSTANCE_HOST")

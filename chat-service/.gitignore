@@ -16,6 +16,8 @@ ENV/
 # Environment variables
 .env
 *.env
+.env.production
+*.env.production
 
 # Pytest, coverage, test reports
 .cache/
