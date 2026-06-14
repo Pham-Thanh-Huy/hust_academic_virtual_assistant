@@ -1,7 +1,7 @@
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8671/eureka/
+      defaultZone: http://hust-assistant-eureka-server:8671/eureka/
 
 spring:
   application:
@@ -21,7 +21,7 @@ application:
     expiration: 2592000000 #60(Second) * 60(Munites) * 24(hours) * 30(days) * 1000(mili second)
   service:
     user-service:
-      url: http://user-service:8080
+      url: http://hust-assistant-user-service:8080
       name: user-service
 
 server:
