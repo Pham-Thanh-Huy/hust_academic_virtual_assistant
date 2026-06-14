@@ -1,7 +1,7 @@
 eureka:
   client:
     service-url:
-      defaultZone: http://eureka-server:8671/eureka/
+      defaultZone: http://hust-assistant-eureka-server:8671/eureka/
 
 server:
   port: 8080
@@ -10,7 +10,7 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:mysql://mysql-container:3306/hust_assistant_access_control
+    url: jdbc:mysql://hust-assistant-mysql-container:3306/hust_assistant_access_control
     username: root
     password: root
   jpa:
@@ -24,5 +24,5 @@ application:
     expiration: 2592000000 #60(Second) * 60(Munites) * 24(hours) * 30(days) * 1000(mili second)
   service:
     user-service:
-      url: http://user-service:8080
+      url: http://hust-assistant-user-service:8080
       name: user-service
