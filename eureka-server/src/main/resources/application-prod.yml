@@ -11,6 +11,6 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     service-url:
-      defaultZone: http://eureka-server:8671/eureka
+      defaultZone: http://hust-assistant-eureka-server:8671/eureka
   server:
     enable-self-preservation: false
