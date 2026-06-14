@@ -22,6 +22,7 @@ const Login = () => {
                     "password": data.password
                 })
             })
+            console.log(response)
         }catch(e){
             console.log(e)
         }
