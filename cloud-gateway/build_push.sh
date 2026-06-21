@@ -15,7 +15,11 @@ fi
 
 echo "Building image..."
 
-docker build -t "phamthanhhuy/${IMAGE_NAME}:${TAG}" -f Dockerfile .
+docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    -t "phamthanhhuy/${IMAGE_NAME}:${TAG}" \
+    -f Dockerfile \
+    --push .
 
 echo "Build image success..."
 

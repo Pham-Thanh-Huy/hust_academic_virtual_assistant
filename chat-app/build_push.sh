@@ -15,7 +15,11 @@ fi
 
 echo "Building image..."
 
-docker build -t "phamthanhhuy/${IMAGE_NAME}:${TAG}" -f Dockerfile .
+docker buildx build \
+    --platform linux/amd64,linux/arm64 \
+    -t "phamthanhhuy/${IMAGE_NAME}:${TAG}" \
+    -f Dockerfile \
+    --push .
 
 echo "Build image success..."
 
@@ -28,7 +32,7 @@ docker push "phamthanhhuy/${IMAGE_NAME}:${TAG}"
 echo "Push success, image is phamthanhhuy/${IMAGE_NAME}:${TAG}"
 
 echo "Remove local image..."
-docker image rm -f "${IMAGE_NAME}:${TAG}"
+docker image rm -f "phamthanhhuy/${IMAGE_NAME}:${TAG}"
 
 echo "Success!"
 exit 0
