@@ -1,8 +1,8 @@
 import "./Chat.style.css";
-import { SideBar } from "../../layouts/side-bar";
-import { Header } from "../../layouts/header";
-import { FiSend } from "react-icons/fi";
-import { useEffect, useRef, useState } from "react";
+import {SideBar} from "../../layouts/side-bar";
+import {Header} from "../../layouts/header";
+import {FiSend} from "react-icons/fi";
+import {useEffect, useRef, useState} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import env from "../../config/env.ts";
@@ -16,8 +16,6 @@ type Message = {
 
 export const Chat = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
-
     const [messageInput, setMessageInput] = useState("");
     const [listMessage, setListMessage] = useState<Message[]>([]);
     const [disableSendMessage, setDisableSendMessage] = useState(false);
@@ -25,44 +23,38 @@ export const Chat = () => {
     const socketRef = useRef<WebSocket | null>(null);
     const reconnectTimer = useRef<number | null>(null);
     const shouldReconnect = useRef(true);
-
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-    /* =========================
-       DETECT MOBILE
-    ========================= */
+
+    const [isMobile, setIsMobile] = useState(false);
     useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768);
-        check();
-        window.addEventListener("resize", check);
-        return () => window.removeEventListener("resize", check);
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        handleResize();
+        window.addEventListener("resize", handleResize);
+
+        return () => window.removeEventListener("resize", handleResize);
     }, []);
 
-    /* =========================
-       AUTO SIDEBAR STATE
-    ========================= */
     useEffect(() => {
-        if (!isMobile) setSidebarOpen(true);
-        else setSidebarOpen(false);
-    }, [isMobile]);
-
-    /* =========================
-       AUTO SCROLL
-    ========================= */
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        chatEndRef.current?.scrollIntoView({behavior: "smooth"});
     }, [listMessage]);
 
-    /* =========================
-       WEBSOCKET
-    ========================= */
+    useEffect(() => {
+        if (window.innerWidth > 768) setSidebarOpen(true);
+        else setSidebarOpen(false);
+    }, []);
+
     const connect = () => {
         const ws = new WebSocket(`${env.WEBSOCKET_URL}/api/v1/chats`);
         socketRef.current = ws;
 
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
+
 
             if (data.type === "chunk") {
                 setListMessage((prev) => {
@@ -72,7 +64,7 @@ export const Chat = () => {
                     messages[last] = {
                         ...messages[last],
                         answer: messages[last].answer + data.data,
-                        streaming: true,
+                        streaming: false,
                     };
 
                     return messages;
@@ -86,7 +78,11 @@ export const Chat = () => {
                     const messages = [...prev];
                     const last = messages.length - 1;
 
-                    messages[last].streaming = false;
+                    messages[last] = {
+                        ...messages[last],
+
+                    };
+
                     return messages;
                 });
             }
@@ -109,17 +105,12 @@ export const Chat = () => {
         };
     }, []);
 
-    /* =========================
-       TOGGLE SIDEBAR
-    ========================= */
     const toggleSidebar = () => setSidebarOpen((p) => !p);
 
-    /* =========================
-       SEND MESSAGE
-    ========================= */
     const sendMessage = () => {
         if (!messageInput.trim()) return;
-        if (disableSendMessage) return;
+
+        if(disableSendMessage) return;
 
         setDisableSendMessage(true);
 
@@ -141,38 +132,36 @@ export const Chat = () => {
 
         setMessageInput("");
 
+        // reset textarea height
         if (textareaRef.current) {
             textareaRef.current.style.height = "40px";
         }
     };
 
     return (
-        <div id="main-container">
-
-            {/* SIDEBAR */}
+        <div id="main-container" className={sidebarOpen ? "sidebar-open" : ""}>
             <div id="main-sidebar" className={sidebarOpen ? "open" : "closed"}>
-                <SideBar />
+                <SideBar/>
             </div>
-
-            {/* BACKDROP MOBILE */}
-            {isMobile && sidebarOpen && (
+            {sidebarOpen && isMobile && (
                 <div
-                    className="sidebar-backdrop"
+                    className="overlay"
                     onClick={toggleSidebar}
                 />
             )}
 
-            {/* MAIN */}
             <div
                 id="main"
-                className={sidebarOpen && isMobile ? "dim" : ""}
+                className={sidebarOpen ? "dim" : ""}
+                onClick={() => {
+                    if (window.innerWidth < 768 && sidebarOpen) toggleSidebar();
+                }}
             >
+                <Header onToggleSidebar={toggleSidebar}/>
 
-                <Header onToggleSidebar={toggleSidebar} />
+                <div className="main__box-chat flex flex-col h-full">
 
-                <div className="main__box-chat">
-
-                    {/* CHAT AREA */}
+                    {/* ================= CHAT AREA ================= */}
                     <div className="flex-1 overflow-y-auto">
 
                         {listMessage.length === 0 ? (
@@ -180,9 +169,18 @@ export const Chat = () => {
                                 <h1 className="text-2xl font-bold text-gray-800 mb-2">
                                     Tra cứu học phần HUST
                                 </h1>
-                                <p className="text-sm text-gray-500">
+
+                                <p className="text-sm text-gray-500 mb-6">
                                     Nhập mã môn học hoặc tên môn để bắt đầu
                                 </p>
+
+                                <div
+                                    className="flex items-center gap-2 bg-gray-50 px-4 py-3 rounded-2xl border border-gray-100">
+                                    <img src="/hust-logo.svg" className="w-5 h-5"/>
+                                    <span className="text-sm text-gray-600">
+                                        Ví dụ: IT3180, Cấu trúc dữ liệu...
+                                    </span>
+                                </div>
                             </div>
                         ) : (
                             <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -192,37 +190,72 @@ export const Chat = () => {
 
                                         {/* USER */}
                                         <div className="flex justify-end">
-                                            <div className="bg-[rgb(154,0,31)] text-white px-4 py-3 rounded-2xl max-w-[80%]">
-                                                {msg.question}
+                                            <div
+                                                className="bg-[rgb(154,0,31)] text-white px-4 py-3 rounded-2xl rounded-br-md max-w-[80%] shadow-sm">
+                                                <p className="text-sm whitespace-pre-wrap break-words break-all">
+                                                    {msg.question}
+                                                </p>
                                             </div>
                                         </div>
 
                                         {/* BOT */}
                                         <div className="flex items-start gap-3">
+                                            <img
+                                                src="/hust-logo.svg"
+                                                alt="bot"
+                                                className="w-8 h-8 object-contain bg-white"
+                                            />
 
-                                            <img src="/hust-logo.svg" className="w-8 h-8" />
+                                            <div
+                                                className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl rounded-bl-md max-w-[80%]">
+                                                <div
+                                                    className="text-sm text-gray-800 prose prose-sm max-w-none prose-pre:bg-gray-900
+                                                    prose-pre:text-white prose-table:border prose-table:border-gray-200">
+                                                    <ReactMarkdown
+                                                        remarkPlugins={[remarkGfm]}
+                                                        components={{
+                                                            table: ({...props}) => (
+                                                                <table
+                                                                    className="border-collapse border border-gray-300 w-full my-2" {...props} />
+                                                            ),
+                                                            th: ({...props}) => (
+                                                                <th className="border border-gray-300 bg-gray-100 px-2 py-1 text-left" {...props} />
+                                                            ),
+                                                            td: ({...props}) => (
+                                                                <td className="border border-gray-300 px-2 py-1" {...props} />
+                                                            ),
+                                                            tr: ({...props}) => (
+                                                                <tr className="border border-gray-300" {...props} />
+                                                            ),
+                                                        }}
+                                                    >
+                                                        {msg.answer}
+                                                    </ReactMarkdown>
+                                                </div>
 
-                                            <div className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl max-w-[80%]">
-
-                                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                                    {msg.answer}
-                                                </ReactMarkdown>
-
+                                                {msg.streaming && (
+                                                    <div className="flex gap-1 mt-2">
+                                                        <span
+                                                            className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"></span>
+                                                        <span
+                                                            className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]"></span>
+                                                        <span
+                                                            className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:300ms]"></span>
+                                                    </div>
+                                                )}
                                             </div>
-
                                         </div>
 
                                     </div>
                                 ))}
 
-                                <div ref={chatEndRef} />
+                                <div ref={chatEndRef}/>
                             </div>
                         )}
                     </div>
 
-                    {/* INPUT */}
+                    {/* ================= INPUT (AUTO RESIZE TEXTAREA) ================= */}
                     <div className="border-t border-gray-100 bg-white px-4 py-3">
-
                         <form
                             className="flex items-end gap-3 max-w-3xl mx-auto"
                             onSubmit={(e) => {
@@ -237,20 +270,31 @@ export const Chat = () => {
                                 placeholder="Nhập câu hỏi..."
                                 onChange={(e) => {
                                     setMessageInput(e.target.value);
+
                                     e.target.style.height = "auto";
                                     e.target.style.height =
                                         Math.min(e.target.scrollHeight, 120) + "px";
                                 }}
-                                className="flex-1 px-4 py-3 border rounded-2xl resize-none"
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter" && !e.shiftKey) {
+                                        e.preventDefault();   // ❌ chặn xuống dòng
+                                        sendMessage();        // ✅ gửi message
+                                    }
+                                }}
+                                className="flex-1 px-4 py-3 text-sm border border-gray-200 rounded-2xl
+                                focus:outline-none focus:border-[rgb(154,0,31)] shadow-sm
+                                resize-none overflow-y-auto max-h-[120px] scroll-hidden"
                             />
 
                             <button
-                                disabled={!messageInput.trim()}
-                                className="p-3 bg-[rgb(154,0,31)] text-white rounded-2xl disabled:opacity-40"
+                                disabled={disableSendMessage || !messageInput.trim()}
+                                className="p-3 rounded-2xl bg-[rgb(154,0,31)] text-white
+                                           hover:brightness-110 active:scale-95
+                                           disabled:opacity-40 disabled:cursor-not-allowed
+                                           transition-all shadow-md"
                             >
-                                <FiSend size={18} />
+                                <FiSend size={18}/>
                             </button>
-
                         </form>
                     </div>
 
