@@ -217,8 +217,7 @@
 .info-user {
     border-top: 1px solid rgb(228 189 188 / 0.3);
     margin-top: auto;
-    padding-top: 20px;
-    padding-bottom: 15px;
+    padding: 10px 0 10px 0;
     /*border-top: 1px solid rgb(228 189 188 / 0.3);*/
 
     flex-shrink: 0;

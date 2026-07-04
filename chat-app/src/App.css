@@ -3,6 +3,16 @@ body {
     padding: 0;
 }
 
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.Toastify__toast {
+    justify-content: center;
+    text-align: center;
+}
+
 #root {
     width: 100%;
     min-height: 100vh;

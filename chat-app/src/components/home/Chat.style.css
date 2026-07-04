@@ -3,7 +3,7 @@
     height: 100vh;
     display: flex;
     overflow: hidden;
-    background-color: rgb(255 248 247);
+    /*background-color: rgb(255 248 247);*/
 }
 
 /* SIDEBAR */
@@ -87,7 +87,7 @@
 }
 
 .main__box-chat__list-chat__intro__bot-message p {
-    background-color: rgb(189 189 189);
+    /*background-color: rgb(189 189 189);*/
     padding: 1rem;
     max-width: 480px;
     min-width: 0;
@@ -96,7 +96,14 @@
 
 }
 
+.scroll-hidden {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
 
+.scroll-hidden::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
 
 /*-----------------END INTRO MESSAGE-----------------*/
 
@@ -123,7 +130,7 @@
 }
 
 .bot-message {
-    background-color: rgb(237 237 237);
+    /*background-color: rgb(237 237 237);*/
     padding: 1rem;
     max-width: 680px;
     min-width: 0;
