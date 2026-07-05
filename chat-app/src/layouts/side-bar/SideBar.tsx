@@ -1,8 +1,15 @@
 import "./SideBar.style.css";
 import { FaRegComment, FaSearch, FaPlus } from "react-icons/fa";
+import {useNavigate} from "react-router-dom";
 
 export const SideBar = () => {
     const isLogin = Boolean(localStorage.getItem("token"));
+    const navigate = useNavigate();
+
+    const logout = () => {
+        localStorage.removeItem("token")
+        navigate(0)
+    }
 
     return (
         <div className="sidebar-container flex flex-col h-full bg-white">
@@ -125,6 +132,7 @@ export const SideBar = () => {
                             border border-gray-200 text-gray-700
                             hover:bg-red-50 hover:text-red-600 hover:border-red-200
                             transition active:scale-95"
+                                onClick={logout}
                         >
                             Đăng xuất
                         </button>
@@ -136,6 +144,7 @@ export const SideBar = () => {
                         rounded-xl shadow-md
                         hover:shadow-lg hover:brightness-110
                         active:scale-95 transition"
+                            onClick={() => navigate("/login")}
                     >
                         Đăng nhập
                     </button>
