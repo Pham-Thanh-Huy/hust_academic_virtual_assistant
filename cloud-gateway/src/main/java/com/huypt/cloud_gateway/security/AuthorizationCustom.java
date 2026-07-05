@@ -15,15 +15,13 @@ import reactor.core.publisher.Mono;
 @Component
 public class AuthorizationCustom {
     private final ApplicationProperties config;
+    private final WebClient webClient;
 
     public Mono<JsonNode> authenRequestService(String path, String method, String token) {
-        WebClient webClient = WebClient.builder()
-                .baseUrl(config.getService().getAuthenService().getUrl())
-                .filter(CurlLoggingFilter.curlAuthenLogging())
-                .build();
+
 
         return webClient.post()
-                .uri("/auth")
+                .uri(config.getService().getAuthenService().getUrl() + "/auth")
                 .headers(headers -> {
                             headers.set("X-Authen-Url", path);
                             headers.set("X-Authen-Method", method.toUpperCase());
