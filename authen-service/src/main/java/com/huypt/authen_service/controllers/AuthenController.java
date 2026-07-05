@@ -11,6 +11,7 @@ public class AuthenController {
     @Operation(summary = "API authen cho hệ thống")
     @PostMapping("/auth")
     public ResponseEntity<CommonResponse<String>> auth(){
+        System.out.println("[AUTH-SERVICE] HIT /auth");
         return ResponseEntity.ok(CommonResponse.success("Authen success!", null));
     }
 }

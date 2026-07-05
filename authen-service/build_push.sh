@@ -13,7 +13,11 @@ if [ -z "$TAG" ] || [ -z "$DOCKER_USERNAME" ] || [ -z "$DOCKER_PASSWORD" ]; then
     exit 1
 fi
 
-echo "Building image..."
+echo "Login Docker Hub..."
+docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
+
+
+echo "Building and push image..."
 
 docker buildx build \
     --platform linux/amd64,linux/arm64 \
@@ -22,12 +26,6 @@ docker buildx build \
     --push .
 
 echo "Build image success..."
-
-echo "Login Docker Hub..."
-docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
-
-echo "Push image..."
-docker push "phamthanhhuy/${IMAGE_NAME}:${TAG}"
 
 echo "Push success, image is phamthanhhuy/${IMAGE_NAME}:${TAG}"
 

@@ -28,6 +28,8 @@ public class GlobalFallBackFilter implements GlobalFilter, Ordered {
         String method = exchange.getRequest().getMethod().toString();
         String token = extractToken(exchange);
 
+        log.info("[GATEWAY] Incoming request: {} {}", method, path);
+        log.info("[GATEWAY] Calling auth-service for: {}", path);
         return authorizationCustom.authenRequestService(path, method, token)
                 .flatMap(response -> handleAuthResponse(response, exchange, chain))
                 .onErrorResume(e -> handleAuthError(e, exchange));
