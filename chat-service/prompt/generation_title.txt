@@ -1,0 +1,12 @@
+Hãy tạo một tiêu đề ngắn cho đoạn hội thoại sau (khoảng 6 - 12 từ).
+
+Tiêu đề phải:
+- Tóm tắt đúng nội dung chính
+- Ngắn gọn, tự nhiên như tiêu đề ChatGPT
+- Không sao chép nguyên câu
+- Không thêm giải thích
+
+Đoạn hội thoại:
+{message}
+
+Tiêu đề:

@@ -1,5 +1,6 @@
 import logging
 from pathlib import Path
+from pprint import pprint
 
 from fastapi import WebSocket
 
@@ -89,11 +90,11 @@ def standardization_voice_question(input: str):
         prompt = template.format(question=input["question"])
 
         # Fix cứng dùng model free
-        model = "gpt-3.5-turbo"
+        model = "gpt-5-nano"
 
         res = client.responses.create(
             model=model,
-            temperature=0,
+            max_output_tokens=128,
             input=prompt
         )
 
@@ -106,6 +107,44 @@ def standardization_voice_question(input: str):
         }
     except Exception as e:
         logging.error(f"[ERROR-STANDARDIZATION] {e}")
+        return {
+            "status": {
+                "message": Constant.API_STATUS.INTERNAL_SERVER_ERROR,
+                "code": Constant.API_STATUS.INTERNAL_SERVER_ERROR_CODE
+            }
+        }
+
+
+def generation_title(input: str):
+    try:
+        # Fix cứng dùng model free
+        model = "gpt-5-nano"
+
+        with open(f"{FILE_DIR.parents[2]}/prompt/generation_title.txt", "r") as file:
+            template = file.read()
+        prompt = template.format(message=input["message"])
+
+        res = client.responses.create(
+            model=model,
+            reasoning={
+                "effort": "minimal"
+            },
+            max_output_tokens=64,
+            input=prompt
+        )
+
+        pprint(res.model_dump())
+
+        return {
+            "data": res.output_text,
+            "status": {
+                "message": "Sucess!",
+                "code": 200
+            }
+        }
+
+    except Exception as e:
+        logging.error(f"[ERROR-GENERATION_TITLE] {e}")
         return {
             "status": {
                 "message": Constant.API_STATUS.INTERNAL_SERVER_ERROR,
