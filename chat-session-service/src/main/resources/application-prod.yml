@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: chat-session-service
+  datasource:
+    url: jdbc:mysql://hust-assistant-mysql-container:3306/hust_assistant
+    username: root
+    password: tla-hust!2026
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
+application:
+  service:
+    chat-service:
+      url: http://hust-assistant-chat-service:1923

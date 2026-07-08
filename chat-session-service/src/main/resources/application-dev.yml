@@ -1,0 +1,27 @@
+spring:
+  data:
+    mongodb:
+      host: localhost
+      port: 27018
+      database: hust_assistant
+      username: root
+      password: tla-hust!2026
+      authentication-database: admin
+  application:
+    name: chat-session-service
+  datasource:
+    url: jdbc:mysql://localhost:3307/hust_assistant
+    username: root
+    password: tla-hust!2026
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+
+server:
+  port: 8085
+
+application:
+  service:
+    chat-service:
+      url: http://localhost:1923
