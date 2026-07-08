@@ -200,11 +200,11 @@ export const Chat = () => {
 
                                         {/* BOT */}
                                         <div className="flex items-start gap-3">
-                                            <img
-                                                src="/hust-logo.svg"
-                                                alt="bot"
-                                                className="w-8 h-8 object-contain bg-white"
-                                            />
+                                            {/*<img*/}
+                                            {/*    src="/hust-logo.svg"*/}
+                                            {/*    alt="bot"*/}
+                                            {/*    className="w-8 h-8 object-contain bg-white"*/}
+                                            {/*/>*/}
 
                                             <div
                                                 className="bg-gray-50 border border-gray-100 px-4 py-3 rounded-2xl rounded-bl-md max-w-[80%]">
