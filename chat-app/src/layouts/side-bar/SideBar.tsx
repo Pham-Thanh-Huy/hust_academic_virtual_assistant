@@ -24,7 +24,7 @@ export const SideBar = () => {
         navigate(0)
     }
 
-    const getListSession = async (username: string, word: String) => {
+    const getListSession = async (username: string, word: string) => {
 
         try {
             const params = new URLSearchParams({
