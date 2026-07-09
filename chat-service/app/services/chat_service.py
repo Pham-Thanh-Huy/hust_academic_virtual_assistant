@@ -1,9 +1,11 @@
+import asyncio
 import logging
 from pathlib import Path
-from pprint import pprint
 
+import httpx
 from fastapi import WebSocket
 
+from app.config.load_env import Env
 from app.requests.chat_request import ChatRequest
 from app.services.query_embedding import query_vector_database_course
 from app.utils.constants import Constant
@@ -21,7 +23,16 @@ async def chat(web_socket: WebSocket) -> dict:
         client_async = init_async_open_ai()
         await web_socket.accept()
         while True:
-            data =  await web_socket.receive_json()
+            data = await web_socket.receive_json()
+            if not data.get("sessionId"):
+                await web_socket.send_json({
+                    "status": {
+                        "message": "sessionId is required",
+                        "code": 400
+                    }
+                })
+                continue  # hoặc break nếu muốn đóng websocket
+
             input = ChatRequest(**data)
             courses = query_vector_database_course(input.question)
             # chat_id = new c
@@ -40,16 +51,16 @@ async def chat(web_socket: WebSocket) -> dict:
                 params["previous_response_id"] = input.previous_response_id
 
             stream = await client_async.responses.create(**params)
-
             current_response_id = None
 
+            full_answer = ""
+            session_id = data.get("sessionId")
             async for chunk in stream:
-                print(chunk)
                 if chunk.type == "response.output_text.delta":
+                    full_answer += chunk.delta
                     await web_socket.send_json({
                         "type": "chunk",
                         "data": chunk.delta,
-                        # "response_id": chunk.id,
                         "status": {
                             "message": "Success",
                             "code": 200
@@ -57,6 +68,8 @@ async def chat(web_socket: WebSocket) -> dict:
                     })
                 if chunk.type == "response.completed":
                     current_response_id = chunk.response.id
+
+            asyncio.create_task(save_chat_message(session_id, input.model, input.question, full_answer))
 
             await web_socket.send_json(
                 {
@@ -78,9 +91,32 @@ async def chat(web_socket: WebSocket) -> dict:
         })
 
 
-"""
-    standardization voice question (course) by user
-"""
+async def save_chat_message(session_id: str, model: str, message: str, answer: str):
+    body = {
+        "message": message,
+        "model": model,
+        "answer": answer
+    }
+
+    params = {
+        "sessionId": session_id
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post(
+                f"{Env.ChatService.url}/api/v1/add-message",
+                params=params,
+                json=body,
+            )
+            response.raise_for_status()
+
+    except Exception as e:
+        logging.error(f"[SAVE-CHAT-ERROR] {e}")
+
+"""standardization voice question (course) by user"""
+
+
 def standardization_voice_question(input: str):
     try:
         # GET PROMPT
@@ -132,8 +168,6 @@ def generation_title(input: str):
             max_output_tokens=64,
             input=prompt
         )
-
-        pprint(res.model_dump())
 
         return {
             "data": res.output_text,

@@ -22,3 +22,6 @@ class Env:
         app_name=os.getenv("EUREKA_APP_NAME")
         instance_port=int(os.getenv("EUREKA_INSTANCE_PORT", 8671))
         instance_host=os.getenv("EUREKA_INSTANCE_HOST")
+
+    class ChatService:
+        url = os.getenv("CHAT_SESSION_SERVICE_URL")

@@ -7,6 +7,7 @@ from openai import AsyncOpenAI
 
 def init_open_ai():
     client = httpx.Client(
+        proxy= "http://huypt84:%40Th3062k3@172.16.2.205:3128",
         verify=False
     )
 
@@ -16,6 +17,7 @@ def init_open_ai():
 
 def init_async_open_ai():
     http_client = httpx.AsyncClient(
+        proxy="http://huypt84:%40Th3062k3@172.16.2.205:3128",
         verify=False
     )
     client = AsyncOpenAI(http_client=http_client)
