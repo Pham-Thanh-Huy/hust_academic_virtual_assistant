@@ -1,15 +1,89 @@
 import "./SideBar.style.css";
 import { FaRegComment, FaSearch, FaPlus } from "react-icons/fa";
 import {useNavigate} from "react-router-dom";
+import {useEffect, useState} from "react";
+import {jwtDecode} from "jwt-decode";
 
+type Session = {
+    "id": string;
+    "title": string;
+    "status": string;
+    "username": string;
+    "lastMessageAt": string;
+    "totalMessage": number
+    "createdAt": string;
+}
 export const SideBar = () => {
     const isLogin = Boolean(localStorage.getItem("token"));
     const navigate = useNavigate();
+    const [listSession, setListSession] = useState<Session[]>([]);
+    const [word, setWord] = useState("");
 
     const logout = () => {
         localStorage.removeItem("token")
         navigate(0)
     }
+
+    const getListSession = async (username: string, word: String) => {
+
+        try {
+            const params = new URLSearchParams({
+                username: username,
+            });
+
+            if (word && word.trim() !== "") {
+                params.append("word", word.trim());
+            }
+
+            const response = await fetch(
+                `http://localhost:8085/api/v1/list-session?${params.toString()}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                }
+            );
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setListSession(result.data);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
+
+
+    const newChat = () => {
+        navigate("/")
+    }
+    useEffect(() => {
+        if (!isLogin) return;
+
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const decode = jwtDecode<{ username: string }>(token);
+
+        // Không có từ khóa -> gọi ngay
+        if (!word.trim()) {
+            getListSession(decode.username, "");
+            return;
+        }
+
+        // Có từ khóa -> debounce 500ms
+        const timer = setTimeout(() => {
+            getListSession(decode.username, word);
+        }, 500);
+
+        return () => {
+            clearTimeout(timer);
+        };
+
+    }, [word, isLogin]);
 
     return (
         <div className="sidebar-container flex flex-col h-full bg-white">
@@ -42,6 +116,7 @@ export const SideBar = () => {
                         shadow-sm hover:shadow-md
                         hover:brightness-110 active:scale-95
                         transition-all"
+                            onClick={() => newChat()}
                     >
                         <FaPlus size={12} />
                         Cuộc trò chuyện mới
@@ -58,6 +133,8 @@ export const SideBar = () => {
 
                         <input
                             disabled={!isLogin}
+                            value={word}
+                            onChange={(e) => setWord(e.target.value)}
                             className="w-full text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400"
                             placeholder="Tìm kiếm lịch sử chat..."
                         />
@@ -82,9 +159,9 @@ export const SideBar = () => {
                         </div>
                     ) : (
                         <div className="flex flex-col gap-1">
-                            {Array.from({ length: 10 }).map((_, idx) => (
+                            {listSession.map((session) => (
                                 <button
-                                    key={idx}
+                                    key={session.id}
                                     className="flex items-start gap-3 w-full px-3 py-2 rounded-lg
                                         hover:bg-red-50 transition group"
                                 >
@@ -95,7 +172,7 @@ export const SideBar = () => {
 
                                     <p className="text-sm text-gray-700 text-left line-clamp-2
                                         group-hover:text-[rgb(154,0,31)] transition">
-                                        Cuộc trò chuyện #{idx + 1} - Lorem ipsum dolor sit amet...
+                                        {session.title}
                                     </p>
                                 </button>
                             ))}

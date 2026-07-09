@@ -23,6 +23,7 @@ function App() {
             <BrowserRouter>
                 <Routes>
                     <Route path={'/'} element={<Chat/>}/>
+                    <Route path={'/:id'} element={<Chat/>}/>
                     <Route path={'/login'} element={<Login/>}/>
                 </Routes>
             </BrowserRouter>
