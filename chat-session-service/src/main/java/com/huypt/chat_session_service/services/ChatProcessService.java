@@ -124,6 +124,7 @@ public class ChatProcessService {
                 query.addCriteria(Criteria.where("title").regex(word, "i"));
             }
             query.addCriteria(Criteria.where("username").regex(username, "i"));
+            query.addCriteria(Criteria.where("status").is(Constants.STATUS_ACTIVE));
 
             query.with(Sort.by(Sort.Direction.DESC, "lastMessageAt"));
             List<ChatSession> chatSessions = mongoTemplate.find(query, ChatSession.class);
@@ -140,6 +141,27 @@ public class ChatProcessService {
             return BaseResponse.makeSuccessResponse(messages);
         } catch (Exception e) {
             log.error("[ERROR-WHEN-LIST-CHAT-MESSAGE] {}", e.getMessage());
+            return BaseResponse.makeInternalServerError(e.getMessage());
+        }
+    }
+
+    public BaseResponse<String> deleteSession(String sessionId, String username){
+        try{
+            User user = userRepository.findByUsername(username);
+            if (ObjectUtils.isEmpty(user)) {
+                return BaseResponse.makeBadRequestResponse("Không tồn tại user với username này!");
+            }
+
+            ChatSession chatSession = chatSessionRepository.findByIdAndUsername(sessionId, username);
+            if(ObjectUtils.isEmpty(chatSession)){
+                return BaseResponse.makeBadRequestResponse("Không tồn tại phiên chat nào với id và username này");
+            }
+
+            chatSession.setStatus(Constants.STATUS_DELETE);
+            chatSessionRepository.save(chatSession);
+            return BaseResponse.makeSuccessResponse("Xóa phiên chat thành công");
+        } catch (Exception e) {
+            log.error("[ERROR-WHEN-DELETE-SESSION] {}", e.getMessage());
             return BaseResponse.makeInternalServerError(e.getMessage());
         }
     }

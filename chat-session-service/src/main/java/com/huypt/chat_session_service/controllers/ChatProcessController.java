@@ -20,6 +20,8 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1")
+@CrossOrigin("*")
+
 public class ChatProcessController {
     private final ChatProcessService chatProcessService;
 
@@ -29,10 +31,15 @@ public class ChatProcessController {
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
     }
 
-    @CrossOrigin("*")
     @GetMapping("/list-session")
     public ResponseEntity<BaseResponse<List<ChatSession>>> listSession(@RequestParam String username, @RequestParam(required = false) String word){
         BaseResponse<List<ChatSession>> response = chatProcessService.listSession(username, word);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
+    }
+
+    @DeleteMapping("/delete-session")
+    public ResponseEntity<BaseResponse<String>> deleteSession(@RequestParam String sessionId, @RequestParam String username){
+        BaseResponse<String> response = chatProcessService.deleteSession(sessionId, username);
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
     }
 
@@ -42,10 +49,13 @@ public class ChatProcessController {
         return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getMessage().getStatus()));
     }
 
+
     @GetMapping("/list-message")
     public ResponseEntity<BaseResponse<Page<ChatMessage>>> listSession(@RequestParam String sessionId, Pageable pageable){
         BaseResponse<Page<ChatMessage>> response = chatProcessService.listMessageBySessionId(sessionId, pageable);
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
     }
+
+
 
 }

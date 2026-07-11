@@ -10,4 +10,6 @@ import java.util.List;
 public interface ChatSessionRepository extends MongoRepository<ChatSession, String> {
 
     List<ChatSession> findByUsernameOrderByLastMessageAtDesc(String username);
+
+    ChatSession findByIdAndUsername(String id, String username);
 }

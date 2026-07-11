@@ -6,15 +6,21 @@ import {useEffect, useRef, useState} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import env from "../../config/env.ts";
+import {useNavigate, useParams} from "react-router-dom";
+import {checkIsLoginUtil, getUsernameByToken} from "../../utils/authen.util.ts";
+import {showErrorMessage} from "../../utils/toast.util.ts";
 
 type Message = {
     messageId?: string;
-    question: string;
+    message: string;
     answer: string;
     streaming: boolean;
+    chatAt: string
 };
 
 export const Chat = () => {
+    const {id} = useParams();
+    const navigate = useNavigate()
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [messageInput, setMessageInput] = useState("");
     const [listMessage, setListMessage] = useState<Message[]>([]);
@@ -25,6 +31,33 @@ export const Chat = () => {
     const shouldReconnect = useRef(true);
     const chatEndRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+    const pendingSessionId = useRef<string | null>(null);
+    const [sessionRefresh, setSessionRefresh] = useState(0);
+
+
+    useEffect(() => {
+        if (!id) {
+            setListMessage([]);
+            setMessageInput("");
+            return;
+        }
+
+        if(!checkIsLoginUtil()){
+            navigate("/")
+            return;
+        }
+
+        const params = new URLSearchParams({
+            sessionId: id
+        });
+
+        fetch(`http://localhost:8085/api/v1/list-message?${params}&sort=chatAt,asc`)
+            .then(res => res.json())
+            .then(data => {
+                setListMessage(data.data.content);
+            });
+
+    }, [id]);
 
 
     const [isMobile, setIsMobile] = useState(false);
@@ -85,7 +118,16 @@ export const Chat = () => {
 
                     return messages;
                 });
+
+                if (pendingSessionId.current) {
+                    setSessionRefresh(sessionRefresh + 1)
+                    setTimeout(() => {
+                        navigate(`/chat/${pendingSessionId.current}`);
+                        pendingSessionId.current = null;
+                    }, 500);
+                }
             }
+
         };
 
         ws.onclose = () => {
@@ -107,10 +149,94 @@ export const Chat = () => {
 
     const toggleSidebar = () => setSidebarOpen((p) => !p);
 
-    const sendMessage = () => {
+    const initSession = async (token: string, firstMessage: string) => {
+        const username = getUsernameByToken(token);
+
+        try {
+            const body = {
+                "username": username,
+                "firstMessage": firstMessage
+            }
+            const response = await fetch(
+                `http://localhost:8085/api/v1/init-session`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(body),
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Có lỗi khi gọi API");
+            }
+
+            const data = await response.json();
+
+            return data.data.id;
+        } catch (e) {
+            console.log(`ERROR-WHEN-LIST-SESSION ${e}`);
+            return null;
+        }
+    };
+
+    const sendMessage =  async () => {
+        if (!checkIsLoginUtil()) {
+            setDisableSendMessage(true)
+            showErrorMessage("Vui lòng login để sử dụng sử dụng tính năng hỏi đáp học phần!")
+            setMessageInput("")
+            setTimeout(() => {
+                setDisableSendMessage(false);
+            }, 3000);
+
+            return;
+        }
+
         if (!messageInput.trim()) return;
 
-        if(disableSendMessage) return;
+        if (disableSendMessage) return;
+
+        const firstMessage = listMessage.length === 0;
+
+        if(firstMessage){
+            setListMessage((prev) => [
+                ...prev,
+                {
+                    message: messageInput,
+                    answer: "",
+                    streaming: true,
+                    chatAt: "hihi",
+                },
+            ]);
+
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                showErrorMessage("Vui lòng login lại");
+                return;
+            }
+            const sessionId = await initSession(token, messageInput)
+
+            if(!sessionId){
+                showErrorMessage("Không tạo được session")
+            }
+
+            pendingSessionId.current = sessionId;
+            // Nếu firstMessage sẽ sending kiểu khác
+            socketRef.current?.send(
+                JSON.stringify({
+                    model: "gpt-4o-mini",
+                    question: messageInput,
+                    "sessionId": sessionId
+                })
+            );
+
+
+
+            return
+        }
 
         setDisableSendMessage(true);
 
@@ -118,15 +244,17 @@ export const Chat = () => {
             JSON.stringify({
                 model: "gpt-4o-mini",
                 question: messageInput,
+                "sessionId": id
             })
         );
 
         setListMessage((prev) => [
             ...prev,
             {
-                question: messageInput,
+                message: messageInput,
                 answer: "",
                 streaming: true,
+                chatAt: "hihi",
             },
         ]);
 
@@ -141,7 +269,7 @@ export const Chat = () => {
     return (
         <div id="main-container" className={sidebarOpen ? "sidebar-open" : ""}>
             <div id="main-sidebar" className={sidebarOpen ? "open" : "closed"}>
-                <SideBar/>
+                <SideBar refreshSession={sessionRefresh} sessionId={id}/>
             </div>
             {sidebarOpen && isMobile && (
                 <div
@@ -193,7 +321,7 @@ export const Chat = () => {
                                             <div
                                                 className="bg-[rgb(154,0,31)] text-white px-4 py-3 rounded-2xl rounded-br-md max-w-[80%] shadow-sm">
                                                 <p className="text-sm whitespace-pre-wrap break-words break-all">
-                                                    {msg.question}
+                                                    {msg.message}
                                                 </p>
                                             </div>
                                         </div>
@@ -277,8 +405,8 @@ export const Chat = () => {
                                 }}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter" && !e.shiftKey) {
-                                        e.preventDefault();   // ❌ chặn xuống dòng
-                                        sendMessage();        // ✅ gửi message
+                                        e.preventDefault();   // chặn xuống dòng
+                                        sendMessage();
                                     }
                                 }}
                                 className="flex-1 px-4 py-3 text-sm border border-gray-200 rounded-2xl

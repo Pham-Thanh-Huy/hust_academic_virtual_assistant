@@ -117,3 +117,12 @@ html, body, #root {
     background: rgba(0, 0, 0, 0.4);
     z-index: 10;
 }
+
+.scroll-hidden {
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE, Edge cũ */
+}
+
+.scroll-hidden::-webkit-scrollbar {
+    display: none;              /* Chrome, Safari */
+}

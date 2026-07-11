@@ -18,12 +18,12 @@ function App() {
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="colored"
+                theme="light"
             />
             <BrowserRouter>
                 <Routes>
                     <Route path={'/'} element={<Chat/>}/>
-                    <Route path={'/:id'} element={<Chat/>}/>
+                    <Route path={'/chat/:id'} element={<Chat/>}/>
                     <Route path={'/login'} element={<Login/>}/>
                 </Routes>
             </BrowserRouter>
