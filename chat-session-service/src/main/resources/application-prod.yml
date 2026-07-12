@@ -14,3 +14,8 @@ application:
   service:
     chat-service:
       url: http://hust-assistant-chat-service:1923
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://hust-assistant-eureka-server:8671/eureka/
