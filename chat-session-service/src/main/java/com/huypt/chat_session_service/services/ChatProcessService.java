@@ -29,6 +29,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 
@@ -51,14 +52,9 @@ public class ChatProcessService {
                 return BaseResponse.makeBadRequestResponse("Không tồn tại user với username này!");
             }
 
-            String body = String.format("{\"message\": \"%s\"}", request.getFirstMessage());
-            String title = "Đoạn hội thoại mới";
-            try (Response response = APIUtils.callAPI(String.format("%s/api/v1/generation-title", config.getService().getChatService().getUrl()), "POST", body)) {
-                if (response.isSuccessful()) {
-                    JsonNode node = mapper.readTree(Objects.requireNonNull(response.body()).string());
-                    title = node.get("data").asText();
-                }
-            }
+            String now = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now());
+            String title = String.format("%s Đoạn hội thoại mới", now);
+
 
             ChatSession chatSession = ChatSession.builder()
                     .title(title)

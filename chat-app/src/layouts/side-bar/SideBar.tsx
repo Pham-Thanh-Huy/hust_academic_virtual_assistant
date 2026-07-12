@@ -98,28 +98,35 @@ export const SideBar = ({refreshSession, sessionId}: SideBarProps) => {
         </div>
 
         {/* ================= HISTORY ================= */}
+        {/* ================= HISTORY ================= */}
         <div className="history-chat flex-1 flex flex-col min-h-0">
+
             {/* TOP ACTIONS */}
-            <div className="px-3 py-3 space-y-3 border-b border-gray-100">
+            <div className="px-3 py-3 space-y-3 border-b border-gray-100 shrink-0">
+
                 {/* NEW CHAT BUTTON */}
                 <button
                     onClick={newChat}
                     className="w-full flex items-center justify-center gap-2
-                py-2.5 rounded-xl
-                bg-[rgb(154,0,31)] text-white
-                font-semibold text-sm
-                shadow-sm hover:shadow-md
-                hover:brightness-110 active:scale-95
-                transition-all"
+            py-2.5 rounded-xl
+            bg-[rgb(154,0,31)] text-white
+            font-semibold text-sm
+            shadow-sm hover:shadow-md
+            hover:brightness-110 active:scale-95
+            transition-all"
                 >
                     <FaPlus size={12}/>
                     Cuộc trò chuyện mới
                 </button>
 
+
                 {/* SEARCH */}
                 <div
                     className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition
-                ${isLogin ? "bg-white border-gray-200 focus-within:border-[rgb(154,0,31)]" : "bg-gray-50 border-gray-100 opacity-60"}`}
+            ${isLogin
+                        ? "bg-white border-gray-200 focus-within:border-[rgb(154,0,31)]"
+                        : "bg-gray-50 border-gray-100 opacity-60"
+                    }`}
                 >
                     <FaSearch size={12} className="text-gray-400"/>
 
@@ -131,62 +138,115 @@ export const SideBar = ({refreshSession, sessionId}: SideBarProps) => {
                         placeholder="Tìm kiếm lịch sử chat..."
                     />
                 </div>
+
             </div>
 
+
             {/* LIST */}
-            <div className="history-chat__list-history px-2 py-3">
+            <div className="history-chat__list-history flex-1 min-h-0 overflow-y-auto px-2 py-3">
+
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider px-2 mb-2">
                     Lịch sử hội thoại
                 </h3>
 
-                {!isLogin ? (<div className="mt-10 text-center px-4">
-                    <div className="text-sm font-semibold text-gray-700">
-                        Chưa đăng nhập
-                    </div>
-                    <div className="text-xs text-gray-400 mt-1">
-                        Đăng nhập để xem lịch sử trò chuyện
-                    </div>
-                </div>) : (<div className="flex flex-col gap-1">
-                    {listSession.map((session) => {
-                        const isActive = session.id === sessionId;
 
-                        return (<div
-                            key={session.id}
-                            onClick={() => navigate(`/chat/${session.id}`)}
-                            className={`group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition
-                                ${isActive ? "bg-red-50" : "hover:bg-red-50"}`}
-                        >
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                                <FaRegComment
-                                    size={12}
-                                    className={`mt-1
-                                        ${isActive ? "text-[rgb(154,0,31)]" : "text-gray-400 group-hover:text-[rgb(154,0,31)]"}`}
-                                />
-
-                                <p
-                                    className={`text-sm text-left line-clamp-2 flex-1 transition
-                                        ${isActive ? "text-[rgb(154,0,31)]" : "text-gray-700 group-hover:text-[rgb(154,0,31)]"}`}
-                                >
-                                    {session.title}
-                                </p>
+                {/* NOT LOGIN */}
+                {!isLogin && (
+                    <div className="h-full flex items-center justify-center px-4">
+                        <div className="text-center">
+                            <div className="text-sm font-semibold text-gray-700">
+                                Chưa đăng nhập
                             </div>
 
-                            <button
-                                className={`ml-2 p-2 rounded-md transition
+                            <div className="text-xs text-gray-400 mt-1">
+                                Đăng nhập để xem lịch sử trò chuyện
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* LOGIN BUT EMPTY */}
+                {isLogin && listSession.length === 0 && (
+                    <div className="h-full flex items-center justify-center px-4">
+                        <div className="text-center">
+                            <div className="text-sm font-semibold text-gray-700">
+                                Chưa có đoạn hội thoại nào
+                            </div>
+
+                            <div className="text-xs text-gray-400 mt-1">
+                                Hãy bắt đầu một cuộc trò chuyện mới
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* SESSION LIST */}
+                {isLogin && listSession.length > 0 && (
+                    <div className="flex flex-col gap-1">
+
+                        {listSession.map((session) => {
+
+                            const isActive = session.id === sessionId;
+
+                            return (
+                                <div
+                                    key={session.id}
+                                    onClick={() => navigate(`/chat/${session.id}`)}
+                                    className={`group flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer transition
+                            ${isActive
+                                        ? "bg-red-50"
+                                        : "hover:bg-red-50"
+                                    }`}
+                                >
+
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+
+                                        <FaRegComment
+                                            size={12}
+                                            className={`mt-1
+                                    ${isActive
+                                                ? "text-[rgb(154,0,31)]"
+                                                : "text-gray-400 group-hover:text-[rgb(154,0,31)]"
+                                            }`}
+                                        />
+
+
+                                        <p
+                                            className={`text-sm text-left line-clamp-2 flex-1 transition
+                                    ${isActive
+                                                ? "text-[rgb(154,0,31)]"
+                                                : "text-gray-700 group-hover:text-[rgb(154,0,31)]"
+                                            }`}
+                                        >
+                                            {session.title}
+                                        </p>
+
+                                    </div>
+
+
+                                    <button
+                                        className="ml-2 p-2 rounded-md transition
                                 hover:text-red-600 hover:bg-red-100
-                                 ${isActive ? "opacity-0 group-hover:opacity-100 text-gray-400" : "opacity-0 group-hover:opacity-100 text-gray-400"}
-                                `}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    // delete session
-                                }}
-                            >
-                                <FaTrashAlt size={12}/>
-                            </button>
-                        </div>);
-                    })}
-                </div>)}
+                                opacity-0 group-hover:opacity-100 text-gray-400"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            // delete session
+                                        }}
+                                    >
+                                        <FaTrashAlt size={12}/>
+                                    </button>
+
+                                </div>
+                            );
+                        })}
+
+                    </div>
+                )}
+
             </div>
+
         </div>
 
         {/* ================= USER FOOTER ================= */}

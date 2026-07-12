@@ -10,7 +10,7 @@ spring:
       password: tla-hust!2026
       authentication-database: admin
   datasource:
-    url: jdbc:mysql://localhost:3309/hust_assistant
+    url: jdbc:mysql://localhost:3307/hust_assistant
     username: root
     password: tla-hust!2026
   jpa:
