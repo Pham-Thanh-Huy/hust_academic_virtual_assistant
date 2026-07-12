@@ -9,6 +9,7 @@ import env from "../../config/env.ts";
 import {useNavigate, useParams} from "react-router-dom";
 import {checkIsLoginUtil, getUsernameByToken} from "../../utils/authen.util.ts";
 import {showErrorMessage} from "../../utils/toast.util.ts";
+import Env from "../../config/env.ts";
 
 type Message = {
     messageId?: string;
@@ -50,8 +51,13 @@ export const Chat = () => {
         const params = new URLSearchParams({
             sessionId: id
         });
-
-        fetch(`http://localhost:8085/api/v1/list-message?${params}&sort=chatAt,asc`)
+        const token = localStorage.getItem("token");
+        fetch(`${Env.API_URL}/chat-session-service/api/v1/list-message?${params}&sort=chatAt,asc`,{
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            }
+        })
             .then(res => res.json())
             .then(data => {
                 setListMessage(data.data.content);
@@ -158,7 +164,7 @@ export const Chat = () => {
                 "firstMessage": firstMessage
             }
             const response = await fetch(
-                `http://localhost:8085/api/v1/init-session`,
+                `${env.API_URL}/chat-session-service/api/v1/init-session`,
                 {
                     method: "POST",
                     headers: {

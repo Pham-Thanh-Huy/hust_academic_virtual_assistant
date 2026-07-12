@@ -3,6 +3,7 @@ package com.huypt.authen_service.domain;
 import com.huypt.authen_service.dtos.response.Resource;
 import com.huypt.authen_service.dtos.response.UserAuthen;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,6 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
+@Getter
 public class CustomUserDetail implements UserDetails {
     private UserAuthen userAuthen;
     private List<Resource> resources;

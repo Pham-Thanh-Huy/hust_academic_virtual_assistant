@@ -14,6 +14,7 @@ import java.util.List;
 public class ResourceResponse {
     private Long id;
     private String name;
+    private String method;
     private String uri;
     private List<String> role;
 }

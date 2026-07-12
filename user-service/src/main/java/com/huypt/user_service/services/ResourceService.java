@@ -28,6 +28,7 @@ public class ResourceService {
             List<ResourceResponse> resourceResponses = resources.stream().map(resource -> ResourceResponse.builder()
                     .id(resource.getId())
                     .name(resource.getName())
+                    .method(resource.getMethod().toString())
                     .uri(resource.getUri())
                     .build()).collect(Collectors.toList());
 

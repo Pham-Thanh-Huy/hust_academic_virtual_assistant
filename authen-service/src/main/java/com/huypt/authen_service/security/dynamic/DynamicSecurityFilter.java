@@ -1,5 +1,7 @@
 package com.huypt.authen_service.security.dynamic;
 
+import com.huypt.authen_service.domain.CustomUserDetail;
+import com.huypt.authen_service.dtos.response.Resource;
 import com.huypt.authen_service.dtos.status.ResponseStatus;
 import com.huypt.authen_service.security.utils.HttpServletResponseCustom;
 import com.huypt.authen_service.security.utils.ValidateEndpointSkipAuthen;
@@ -15,10 +17,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.ObjectUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -52,12 +56,19 @@ public class DynamicSecurityFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = (UsernamePasswordAuthenticationToken)
                 SecurityContextHolder.getContext().getAuthentication();
         Collection<GrantedAuthority> grantedAuthorities = usernamePasswordAuthenticationToken.getAuthorities();
+        CustomUserDetail userDetail = (CustomUserDetail) usernamePasswordAuthenticationToken.getPrincipal();
+        List<Resource> resources = userDetail.getResources();
 
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
-            if(antPathMatcher.match(grantedAuthority.getAuthority(), urlAuthen) &&
-                    request.getMethod().toUpperCase().equals(methodAuthen)){
-                filterChain.doFilter(request, response);
-                return;
+            if(antPathMatcher.match(grantedAuthority.getAuthority(), urlAuthen)){
+                Resource resource = resources.stream()
+                        .filter(r -> r.getUri().equals(urlAuthen))
+                        .findFirst()
+                        .orElse(null);
+                if(!ObjectUtils.isEmpty(resource) && resource.getMethod().equals(methodAuthen.toUpperCase().trim())){
+                    filterChain.doFilter(request, response);
+                    return;
+                }
             }
         }
 

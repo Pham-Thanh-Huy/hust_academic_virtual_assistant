@@ -3,6 +3,7 @@ import {FaPlus, FaRegComment, FaSearch, FaTrashAlt} from "react-icons/fa";
 import {useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import {jwtDecode} from "jwt-decode";
+import env from "../../config/env.ts";
 
 type Session = {
     "id": string; "title": string; "status": string; "username": string; "lastMessageAt": string; "totalMessage": number
@@ -24,7 +25,7 @@ export const SideBar = ({refreshSession, sessionId}: SideBarProps) => {
         navigate(0)
     }
 
-    const getListSession = async (username: string, word: string) => {
+    const getListSession = async (token: string, username: string, word: string) => {
         try {
             const params = new URLSearchParams({
                 username: username,
@@ -34,9 +35,10 @@ export const SideBar = ({refreshSession, sessionId}: SideBarProps) => {
                 params.append("word", word.trim());
             }
 
-            const response = await fetch(`http://localhost:8085/api/v1/list-session?${params.toString()}`, {
+            const response = await fetch(`${env.API_URL}/chat-session-service/api/v1/list-session?${params.toString()}`, {
                 method: "GET", headers: {
                     "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 },
             });
 
@@ -64,13 +66,13 @@ export const SideBar = ({refreshSession, sessionId}: SideBarProps) => {
 
         // Không có từ khóa -> gọi ngay
         if (!word.trim()) {
-            getListSession(decode.username, "");
+            getListSession(token, decode.username, "");
             return;
         }
 
         // Có từ khóa -> debounce 500ms
         const timer = setTimeout(() => {
-            getListSession(decode.username, word);
+            getListSession(token, decode.username, word);
         }, 500);
 
         return () => {
