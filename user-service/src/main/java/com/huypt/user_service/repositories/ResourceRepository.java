@@ -41,4 +41,9 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
             nativeQuery = true
     )
     List<Resource> findPermitAllResource();
+
+
+    boolean existsByName(String name);
+
+    Resource findByUri(String uri);
 }

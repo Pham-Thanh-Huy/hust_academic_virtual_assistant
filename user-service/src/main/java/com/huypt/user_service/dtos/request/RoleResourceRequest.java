@@ -10,5 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RoleResourceRequest {
+    private String name;
+    private String resource;
+    private String method;
     private List<String> role;
 }

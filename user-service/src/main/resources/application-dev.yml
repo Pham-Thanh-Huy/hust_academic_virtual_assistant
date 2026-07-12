@@ -12,9 +12,9 @@ spring:
   application:
     name: user-service
   datasource:
-    url: jdbc:mysql://localhost:3307/hust_assistant_access_control
+    url: jdbc:mysql://localhost:3307/hust_assistant
     username: root
-    password: root
+    password: tla-hust!2026
   jpa:
     hibernate:
       ddl-auto: update

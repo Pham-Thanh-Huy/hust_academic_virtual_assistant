@@ -38,4 +38,14 @@ public class Resource {
     )
     @ToString.Exclude
     private List<Role> roles;
+
+
+    public void setRoleRelation(List<Role> roles){
+        for(Role role : roles){
+            if(!this.roles.contains(role)){
+                this.roles.add(role);
+                role.getResources().add(this);
+            }
+        }
+    }
 }
