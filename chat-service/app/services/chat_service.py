@@ -1,9 +1,12 @@
 import asyncio
+import base64
+import json
 import logging
 from pathlib import Path
 
 import httpx
 from fastapi import WebSocket
+from starlette.responses import StreamingResponse
 
 from app.config.load_env import Env
 from app.requests.chat_request import ChatRequest
@@ -114,35 +117,24 @@ async def save_chat_message(session_id: str, model: str, message: str, answer: s
     except Exception as e:
         logging.error(f"[SAVE-CHAT-ERROR] {e}")
 
-"""standardization voice question (course) by user"""
 
-
-def standardization_voice_question(input: str):
+""" 
+Hàm này dùng để trả ra voice từ câu trả lời của bot
+Hàm yêu cầu chat id, gọi tới chat-session-service để lấy ra đưọc câu trả lời theo chat id đó, rồi gọi tới openai để lấy ra voice
+"""
+async def voice_answer_chat():
     try:
-        # GET PROMPT
-        with open(f"{FILE_DIR.parents[2]}/prompt/standardization.txt", "r") as file:
-            template = file.read()
-
-        prompt = template.format(question=input["question"])
-
-        # Fix cứng dùng model free
-        model = "gpt-5-nano"
-
-        res = client.responses.create(
-            model=model,
-            max_output_tokens=128,
-            input=prompt
-        )
-
-        return {
-            "data": res.output_text,
-            "status": {
-                "message": "Sucess!",
-                "code": 200
+        audio_stream = openai_tts_stream("heelooo các bro tôi là phạm huy đây")
+        return StreamingResponse(
+            audio_stream,
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no-cache"
             }
-        }
+        )
     except Exception as e:
-        logging.error(f"[ERROR-STANDARDIZATION] {e}")
         return {
             "status": {
                 "message": Constant.API_STATUS.INTERNAL_SERVER_ERROR,
@@ -151,37 +143,35 @@ def standardization_voice_question(input: str):
         }
 
 
-def generation_title(input: str):
+
+async def openai_tts_stream(voice_text: str):
     try:
-        # Fix cứng dùng model free
-        model = "gpt-5-nano"
+        async with init_async_open_ai().audio.speech.with_streaming_response.create(
+            model="gpt-4o-mini-tts",
+            voice="sage",
+            input=voice_text,
+            response_format="pcm"
+        ) as response:
 
-        with open(f"{FILE_DIR.parents[2]}/prompt/generation_title.txt", "r") as file:
-            template = file.read()
-        prompt = template.format(message=input["message"])
+            async for chunk in response.iter_bytes():
 
-        res = client.responses.create(
-            model=model,
-            reasoning={
-                "effort": "minimal"
-            },
-            max_output_tokens=64,
-            input=prompt
+                data = {
+                    "type": "audio.chunk",
+                    "audio": base64.b64encode(chunk).decode("utf-8")
+                }
+
+                yield (
+                    "event: audio\n"
+                    f"data: {json.dumps(data)}\n\n"
+                )
+
+        yield (
+            "event: done\n"
+            f"data: {json.dumps({'type': 'speech.audio.done'})}\n\n"
         )
 
-        return {
-            "data": res.output_text,
-            "status": {
-                "message": "Sucess!",
-                "code": 200
-            }
-        }
-
     except Exception as e:
-        logging.error(f"[ERROR-GENERATION_TITLE] {e}")
-        return {
-            "status": {
-                "message": Constant.API_STATUS.INTERNAL_SERVER_ERROR,
-                "code": Constant.API_STATUS.INTERNAL_SERVER_ERROR_CODE
-            }
-        }
+        yield (
+            "event: error\n"
+            f"data: {json.dumps({'message': str(e)})}\n\n"
+        )

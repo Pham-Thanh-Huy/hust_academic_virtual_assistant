@@ -25,6 +25,8 @@ public class ChatMessage {
 
     private String answer;
 
+    private String voiceAnswer; // Dùng để chuẩn hóa lại câu trả lời của bot và voice cho người dùng nghe
+
     private String model;
 
     private Integer sequence;

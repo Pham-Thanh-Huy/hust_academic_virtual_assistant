@@ -12,13 +12,6 @@ async def chat(web_socket: WebSocket):
     await chat_service.chat(web_socket)
 
 
-@chat_router.post("/standardization-voice-question")
-async def standardization(input: dict = Body(...)):
-    res = chat_service.standardization_voice_question(input)
-    return JSONResponse(content=res, status_code=res.get("status").get("code"))
-
-
-@chat_router.post("/generation-title")
-async def generation_title(input: dict = Body(...)):
-    res = chat_service.generation_title(input)
-    return JSONResponse(content=res, status_code=res.get("status").get("code"))
+@chat_router.get("/chat-message/voice")
+async def voice_answer_chat():
+    return await chat_service.voice_answer_chat()

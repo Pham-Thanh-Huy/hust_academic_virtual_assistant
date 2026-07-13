@@ -14,6 +14,7 @@ import com.huypt.chat_session_service.repositories.mongo.ChatSessionRepository;
 import com.huypt.chat_session_service.repositories.mysql.UserRepository;
 import com.huypt.chat_session_service.utils.APIUtils;
 import com.huypt.chat_session_service.utils.Constants;
+import com.huypt.chat_session_service.utils.Function;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Response;
@@ -92,6 +93,7 @@ public class ChatProcessService {
                     .sessionId(sessionId)
                     .message(request.getMessage())
                     .answer(request.getAnswer())
+                    .voiceAnswer(Function.convertMarkdownToVoice(request.getAnswer()))
                     .model(request.getModel())
                     .sequence(sequence + 1)
                     .chatAt(LocalDateTime.now())
