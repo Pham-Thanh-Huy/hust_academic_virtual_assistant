@@ -62,7 +62,7 @@ public class DynamicSecurityFilter extends OncePerRequestFilter {
         for (GrantedAuthority grantedAuthority : grantedAuthorities) {
             if(antPathMatcher.match(grantedAuthority.getAuthority(), urlAuthen)){
                 Resource resource = resources.stream()
-                        .filter(r -> r.getUri().equals(urlAuthen))
+                        .filter(r -> antPathMatcher.match(r.getUri(), urlAuthen))
                         .findFirst()
                         .orElse(null);
                 if(!ObjectUtils.isEmpty(resource) && resource.getMethod().equals(methodAuthen.toUpperCase().trim())){
