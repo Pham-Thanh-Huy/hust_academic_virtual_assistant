@@ -54,7 +54,7 @@ public class ChatProcessService {
                 return BaseResponse.makeBadRequestResponse("Không tồn tại user với username này!");
             }
 
-            String now = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now());
+            String now = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").format(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
             String title = String.format("%s Đoạn hội thoại mới", now);
 
 
