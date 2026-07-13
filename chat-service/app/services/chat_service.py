@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import httpx
+import requests
 from fastapi import WebSocket
 from starlette.responses import StreamingResponse
 
@@ -122,9 +123,21 @@ async def save_chat_message(session_id: str, model: str, message: str, answer: s
 Hàm này dùng để trả ra voice từ câu trả lời của bot
 Hàm yêu cầu chat id, gọi tới chat-session-service để lấy ra đưọc câu trả lời theo chat id đó, rồi gọi tới openai để lấy ra voice
 """
-async def voice_answer_chat():
+async def voice_answer_chat(chat_id: str):
     try:
-        audio_stream = openai_tts_stream("heelooo các bro tôi là phạm huy đây")
+        response = requests.get(
+            f"{Env.ChatService.url}/api/v1/query-message-by-id",
+            params={
+                "id": chat_id
+            }
+        )
+
+        data = response.json()
+
+        voice_text =  data.get("data").get("voiceAnswer")
+
+
+        audio_stream = openai_tts_stream(voice_text)
         return StreamingResponse(
             audio_stream,
             media_type="text/event-stream",

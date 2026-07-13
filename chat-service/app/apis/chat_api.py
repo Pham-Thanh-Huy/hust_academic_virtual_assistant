@@ -12,6 +12,6 @@ async def chat(web_socket: WebSocket):
     await chat_service.chat(web_socket)
 
 
-@chat_router.get("/chat-message/voice")
-async def voice_answer_chat():
-    return await chat_service.voice_answer_chat()
+@chat_router.get("/chat-message/voice/{id}")
+async def voice_answer_chat(id: str):
+    return await chat_service.voice_answer_chat(id)
