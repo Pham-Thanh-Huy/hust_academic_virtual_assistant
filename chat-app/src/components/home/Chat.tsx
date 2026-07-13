@@ -13,7 +13,7 @@ import {showErrorMessage} from "../../utils/toast.util.ts";
 import { Volume2, Square } from "lucide-react";
 
 type Message = {
-    messageId?: string; message: string; answer: string; streaming: boolean; chatAt: string
+    id?: string; message: string; answer: string; streaming: boolean; chatAt: string; started: boolean;
 };
 
 export const Chat = () => {
@@ -33,20 +33,438 @@ export const Chat = () => {
     const [sessionRefresh, setSessionRefresh] = useState(0);
 
     const [isRecording, setIsRecording] = useState(false);
+    const [playingVoiceIndex, setPlayingVoiceIndex] = useState<number | null>(null);
 
-    const [playingVoiceIndex, setPlayingVoiceIndex] = useState(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const nextPlayTimeRef = useRef<number>(0);
+    const voiceAbortRef = useRef<AbortController | null>(null);
+    const audioSourcesRef = useRef<AudioBufferSourceNode[]>([]);
+    const voiceSessionRef = useRef(0);
+    const activeSourceCountRef = useRef(0);
+    const streamDoneRef = useRef(false);
 
-    const handleVoice = (index: any, text: any) => {
+
+    const handleVoice = async (index: number, id: string) => {
         if (playingVoiceIndex === index) {
-            // TODO: gọi BE stop voice
-            setPlayingVoiceIndex(null);
+            await stopCurrentVoice();
             return;
         }
 
-        // TODO: gọi BE tạo voice từ text
-        console.log("Generate voice:", text);
+        if (playingVoiceIndex != null) {
+            await stopCurrentVoice();
+        }
+
+        const sessionId = ++voiceSessionRef.current;
+
+        streamDoneRef.current = false;
+        activeSourceCountRef.current = 0;
 
         setPlayingVoiceIndex(index);
+
+        if (audioContextRef.current == null) {
+            audioContextRef.current = new AudioContext({
+                latencyHint: "interactive",
+                sampleRate: 24000
+            });
+        }
+
+        const audioContext = audioContextRef.current;
+
+        if (audioContext.state === "suspended") {
+            await audioContext.resume();
+        }
+
+        nextPlayTimeRef.current =
+            audioContext.currentTime + 0.05;
+
+        const controller = new AbortController();
+
+        voiceAbortRef.current = controller;
+
+        const token = localStorage.getItem("token");
+
+        let pcmLeftover = new Uint8Array(0);
+        let pcmQueue: Float32Array[] = [];
+
+        let bufferedSamples = 0;
+        let started = false;
+        let firstBuffer = true;
+
+        const MIN_START_BUFFER = 9600; // 400ms
+
+        const playPCMChunk = (base64: string) => {
+            if (sessionId !== voiceSessionRef.current) {
+                return;
+            }
+
+            const binary = atob(base64);
+
+            let bytes = new Uint8Array(binary.length);
+
+            for (let i = 0; i < binary.length; i++) {
+                bytes[i] = binary.charCodeAt(i);
+            }
+
+            if (pcmLeftover.length > 0) {
+                const merged = new Uint8Array(
+                    pcmLeftover.length + bytes.length
+                );
+
+                merged.set(pcmLeftover);
+
+                merged.set(
+                    bytes,
+                    pcmLeftover.length
+                );
+
+                bytes = merged;
+            }
+
+            const usableLength =
+                bytes.length - (bytes.length % 2);
+
+            pcmLeftover =
+                bytes.slice(usableLength);
+
+            if (usableLength === 0) {
+                return;
+            }
+
+            const pcm16 = new Int16Array(
+                bytes.buffer,
+                bytes.byteOffset,
+                usableLength / 2
+            );
+
+            const float32 = new Float32Array(
+                pcm16.length
+            );
+
+            for (let i = 0; i < pcm16.length; i++) {
+                float32[i] =
+                    pcm16[i] / 32768;
+            }
+
+            pcmQueue.push(float32);
+
+            bufferedSamples += float32.length;
+
+            if (!started) {
+                if (bufferedSamples < MIN_START_BUFFER) {
+                    return;
+                }
+
+                started = true;
+            }
+
+            const totalLength =
+                pcmQueue.reduce(
+                    (sum, item) =>
+                        sum + item.length,
+                    0
+                );
+
+            const mergedPCM =
+                new Float32Array(totalLength);
+
+            let offset = 0;
+
+            for (const item of pcmQueue) {
+                mergedPCM.set(
+                    item,
+                    offset
+                );
+
+                offset += item.length;
+            }
+
+            pcmQueue = [];
+
+            bufferedSamples = 0;
+
+            // Fade 2ms tránh click, không làm mất âm đầu
+            if (firstBuffer) {
+                const fadeSamples =
+                    Math.min(
+                        48,
+                        mergedPCM.length
+                    );
+
+                for (let i = 0; i < fadeSamples; i++) {
+                    mergedPCM[i] *=
+                        i / fadeSamples;
+                }
+
+                firstBuffer = false;
+            }
+
+            const audioBuffer =
+                audioContext.createBuffer(
+                    1,
+                    mergedPCM.length,
+                    24000
+                );
+
+            audioBuffer.copyToChannel(
+                mergedPCM,
+                0
+            );
+
+            const source =
+                audioContext.createBufferSource();
+
+            source.buffer = audioBuffer;
+
+            source.connect(
+                audioContext.destination
+            );
+
+            audioSourcesRef.current.push(source);
+
+            activeSourceCountRef.current++;
+
+            source.onended = () => {
+                audioSourcesRef.current =
+                    audioSourcesRef.current.filter(
+                        (item) => item !== source
+                    );
+
+                activeSourceCountRef.current--;
+
+                if (
+                    streamDoneRef.current &&
+                    activeSourceCountRef.current === 0 &&
+                    sessionId === voiceSessionRef.current
+                ) {
+                    setPlayingVoiceIndex(null);
+
+                    nextPlayTimeRef.current = 0;
+                }
+            };
+
+            if (
+                nextPlayTimeRef.current <
+                audioContext.currentTime
+            ) {
+                nextPlayTimeRef.current =
+                    audioContext.currentTime + 0.02;
+            }
+
+            const startTime =
+                Math.max(
+                    audioContext.currentTime + 0.02,
+                    nextPlayTimeRef.current
+                );
+
+            source.start(startTime);
+
+            nextPlayTimeRef.current =
+                startTime +
+                audioBuffer.duration;
+        };
+        try {
+            const response =
+                await fetch(
+                    `http://hust-trolyao-gateway.io.vn/chat-service/api/v1/chat-message/voice/${id}`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization:
+                                `Bearer ${token}`,
+
+                            Accept:
+                                "text/event-stream"
+                        },
+
+                        signal:
+                        controller.signal
+                    }
+                );
+
+            if (!response.ok) {
+                throw new Error(
+                    `HTTP ${response.status}`
+                );
+            }
+
+            if (response.body == null) {
+                throw new Error(
+                    "No stream body"
+                );
+            }
+
+            const reader =
+                response.body.getReader();
+
+            const decoder =
+                new TextDecoder();
+
+            let buffer = "";
+
+            while (true) {
+                if (
+                    sessionId !==
+                    voiceSessionRef.current
+                ) {
+                    break;
+                }
+
+                const result =
+                    await reader.read();
+
+                if (result.done) {
+                    break;
+                }
+
+                buffer +=
+                    decoder.decode(
+                        result.value,
+                        {
+                            stream: true
+                        }
+                    );
+
+                const events =
+                    buffer.split(
+                        /\r?\n\r?\n/
+                    );
+
+                buffer =
+                    events.pop() ?? "";
+
+                for (const event of events) {
+                    const lines =
+                        event.split(
+                            /\r?\n/
+                        );
+
+                    let eventType = "";
+                    let eventData = "";
+
+                    for (const line of lines) {
+                        if (line.startsWith("event:")) {
+                            eventType =
+                                line.substring(6).trim();
+                        }
+
+                        if (line.startsWith("data:")) {
+                            eventData =
+                                line.substring(5).trim();
+                        }
+                    }
+
+                    if (eventData === "") {
+                        continue;
+                    }
+
+                    let data: {
+                        type?: string;
+                        audio?: string;
+                    } = {};
+
+                    try {
+                        data =
+                            JSON.parse(
+                                eventData
+                            );
+                    } catch (e) {
+                        console.warn(
+                            "Invalid SSE JSON",
+                            e
+                        );
+
+                        continue;
+                    }
+
+                    if (
+                        eventType === "audio" &&
+                        data.type === "audio.chunk" &&
+                        data.audio != null
+                    ) {
+                        playPCMChunk(
+                            data.audio
+                        );
+                    }
+
+                    if (
+                        data.type ===
+                        "speech.audio.done"
+                    ) {
+                        if (
+                            sessionId ===
+                            voiceSessionRef.current
+                        ) {
+                            streamDoneRef.current = true;
+
+                            voiceAbortRef.current = null;
+
+                            if (
+                                activeSourceCountRef.current === 0
+                            ) {
+                                setPlayingVoiceIndex(null);
+
+                                nextPlayTimeRef.current = 0;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (error: unknown) {
+            if (
+                error instanceof DOMException &&
+                error.name === "AbortError"
+            ) {
+                return;
+            }
+
+            console.error(
+                "Voice error",
+                error
+            );
+
+            if (
+                sessionId ===
+                voiceSessionRef.current
+            ) {
+                setPlayingVoiceIndex(null);
+            }
+        }
+    };
+
+    const stopCurrentVoice = async () => {
+        // kill session hiện tại
+        voiceSessionRef.current++;
+        // cancel SSE
+        if(voiceAbortRef.current){
+            voiceAbortRef.current.abort();
+            voiceAbortRef.current = null;
+        }
+
+        // kill audio nodes
+        audioSourcesRef.current.forEach(
+            source => {
+                try{
+                    source.stop(0);
+                }
+                catch(e){
+                    console.log(e)
+                }
+            }
+        );
+
+        audioSourcesRef.current = [];
+        nextPlayTimeRef.current = 0;
+
+        // destroy context
+        if(audioContextRef.current){
+            try{
+                await audioContextRef.current.close();
+            }catch (e){
+                console.log(e);
+            }
+            audioContextRef.current = null;
+        }
+        setPlayingVoiceIndex(null);
     };
 
     useEffect(() => {
@@ -111,7 +529,7 @@ export const Chat = () => {
                     const last = messages.length - 1;
 
                     messages[last] = {
-                        ...messages[last], answer: messages[last].answer + data.data, streaming: false,
+                        ...messages[last], answer: messages[last].answer + data.data, started: false,
                     };
 
                     return messages;
@@ -127,7 +545,7 @@ export const Chat = () => {
 
                     messages[last] = {
                         ...messages[last],
-
+                        streaming: false
                     };
 
                     return messages;
@@ -191,9 +609,10 @@ export const Chat = () => {
 
     const sendMessage = async () => {
         if (!checkIsLoginUtil()) {
-            setDisableSendMessage(true)
-            showErrorMessage("Vui lòng login để sử dụng sử dụng tính năng hỏi đáp học phần!")
-            setMessageInput("")
+            setDisableSendMessage(true);
+            showErrorMessage("Vui lòng login để sử dụng tính năng hỏi đáp học phần!");
+            setMessageInput("");
+
             setTimeout(() => {
                 setDisableSendMessage(false);
             }, 3000);
@@ -205,51 +624,76 @@ export const Chat = () => {
 
         if (disableSendMessage) return;
 
-        const firstMessage = listMessage.length === 0;
+        const currentMessage = messageInput;
 
-        if (firstMessage) {
-            setListMessage((prev) => [...prev, {
-                message: messageInput, answer: "", streaming: true, chatAt: "hihi",
-            },]);
-
-            const token = localStorage.getItem("token");
-
-            if (!token) {
-                showErrorMessage("Vui lòng login lại");
-                return;
-            }
-            const sessionId = await initSession(token, messageInput)
-
-            if (!sessionId) {
-                showErrorMessage("Không tạo được session")
-            }
-
-            pendingSessionId.current = sessionId;
-            // Nếu firstMessage sẽ sending kiểu khác
-            socketRef.current?.send(JSON.stringify({
-                model: "gpt-4o-mini", question: messageInput, "sessionId": sessionId
-            }));
-
-
-            return
-        }
-
-        setDisableSendMessage(true);
-
-        socketRef.current?.send(JSON.stringify({
-            model: "gpt-4o-mini", question: messageInput, "sessionId": id
-        }));
-
-        setListMessage((prev) => [...prev, {
-            message: messageInput, answer: "", streaming: true, chatAt: "hihi",
-        },]);
-
+        // clear input ngay khi gửi
         setMessageInput("");
 
         // reset textarea height
         if (textareaRef.current) {
             textareaRef.current.style.height = "40px";
         }
+
+        setDisableSendMessage(true);
+
+        const firstMessage = listMessage.length === 0;
+
+        // add message user vào UI trước
+        setListMessage((prev) => [
+            ...prev,
+            {
+                message: currentMessage,
+                answer: "",
+                streaming: true,
+                chatAt: "hihi",
+                started: true
+            }
+        ]);
+
+        if (firstMessage) {
+            const token = localStorage.getItem("token");
+
+            if (!token) {
+                showErrorMessage("Vui lòng login lại");
+                setDisableSendMessage(false);
+                return;
+            }
+
+            try {
+                const sessionId = await initSession(token, currentMessage);
+
+                if (!sessionId) {
+                    showErrorMessage("Không tạo được session");
+                    setDisableSendMessage(false);
+                    return;
+                }
+
+                pendingSessionId.current = sessionId;
+
+                socketRef.current?.send(
+                    JSON.stringify({
+                        model: "gpt-4o-mini",
+                        question: currentMessage,
+                        sessionId
+                    })
+                );
+            } catch (error) {
+                console.error("init session error:", error);
+                showErrorMessage("Có lỗi khi tạo session");
+                setDisableSendMessage(false);
+            }
+
+            return;
+        }
+
+        // các message sau dùng session id hiện tại
+        socketRef.current?.send(
+            JSON.stringify({
+                model: "gpt-4o-mini",
+                question: currentMessage,
+                sessionId: id
+            })
+        );
     };
 
     return (<div id="main-container" className={sidebarOpen ? "sidebar-open" : ""}>
@@ -273,7 +717,7 @@ export const Chat = () => {
             <div className="main__box-chat flex flex-col h-full">
 
                 {/* ================= CHAT AREA ================= */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 min-h-0 overflow-y-auto">
                     {listMessage.length === 0 ? (
                         <div className="h-full flex flex-col items-center justify-center text-center px-6">
                             <h1 className="text-2xl font-bold text-gray-800 mb-2">Tra cứu học phần HUST</h1>
@@ -298,25 +742,23 @@ export const Chat = () => {
                                     </div>
 
                                     {/* BOT */}
-                                    <div className="relative bg-gray-50 border border-gray-100 px-4 py-3 pr-12 rounded-2xl rounded-bl-md max-w-[80%] shadow-sm">
-                                        <button
-                                            onClick={() => handleVoice(index, msg.answer)}
-                                            className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
-                                                playingVoiceIndex === index
-                                                    ? "bg-gradient-to-br from-[rgb(154,0,31)] to-red-700 text-white shadow-[0_0_0_4px_rgba(154,0,31,0.15),0_4px_12px_rgba(154,0,31,0.35)] scale-105"
-                                                    : "bg-white text-gray-400 border border-gray-200 shadow-sm hover:text-[rgb(154,0,31)] hover:border-[rgb(154,0,31)] hover:shadow-md hover:scale-105"
-                                            }`}
-                                            title={playingVoiceIndex === index ? "Dừng đọc" : "Nghe câu trả lời"}
-                                        >
-                                            {playingVoiceIndex === index ? (
-                                                <div className="relative flex items-center justify-center">
-                                                    <span className="absolute w-5 h-5 rounded-full bg-white/20 animate-ping"/>
-                                                    <Square size={13} fill="currentColor" className="relative"/>
-                                                </div>
-                                            ) : (
-                                                <Volume2 size={16}/>
-                                            )}
-                                        </button>
+                                    <div className={`relative px-4 py-3 rounded-2xl rounded-bl-md max-w-[80%] ${!msg.streaming ? "pr-12" : ""}`}>
+                                        {!msg.streaming && (
+                                            <button
+                                                onClick={() => handleVoice(index, msg.id as string)}
+                                                className={`absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-300 ${playingVoiceIndex === index ? "bg-gradient-to-br from-[rgb(154,0,31)] to-red-700 text-white shadow-[0_0_0_4px_rgba(154,0,31,0.15),0_4_12px_rgba(154,0,31,0.35)] scale-105" : "bg-white text-gray-400 border border-gray-200 shadow-sm hover:text-[rgb(154,0,31)] hover:border-[rgb(154,0,31)] hover:shadow-md hover:scale-105"}`}
+                                                title={playingVoiceIndex === index ? "Dừng đọc" : "Nghe câu trả lời"}
+                                            >
+                                                {playingVoiceIndex === index ? (
+                                                    <div className="relative flex items-center justify-center">
+                                                        <span className="absolute w-5 h5 rounded-full bg-white/20 animate-ping"/>
+                                                        <Square size={13} fill="currentColor" className="relative"/>
+                                                    </div>
+                                                ) : (
+                                                    <Volume2 size={16}/>
+                                                )}
+                                            </button>
+                                        )}
 
                                         <div className="text-sm text-gray-800 prose prose-sm max-w-none prose-pre:bg-gray-900 prose-pre:text-white">
                                             <ReactMarkdown
@@ -330,16 +772,10 @@ export const Chat = () => {
                                                         </div>
                                                     ),
                                                     th: ({...props}) => (
-                                                        <th
-                                                            className="border-r border-b border-gray-300 bg-gray-100 px-3 py-2 text-left whitespace-nowrap"
-                                                            {...props}
-                                                        />
+                                                        <th className="border-r border-b border-gray-300 bg-gray-100 px-3 py-2 text-left whitespace-nowrap" {...props}/>
                                                     ),
                                                     td: ({...props}) => (
-                                                        <td
-                                                            className="border-r border-b border-gray-300 px-3 py-2"
-                                                            {...props}
-                                                        />
+                                                        <td className="border-r border-b border-gray-300 px-3 py-2" {...props}/>
                                                     ),
                                                     tr: ({...props}) => (
                                                         <tr {...props}/>
@@ -350,7 +786,7 @@ export const Chat = () => {
                                             </ReactMarkdown>
                                         </div>
 
-                                        {msg.streaming && (
+                                        {msg.started && (
                                             <div className="flex gap-1 mt-2">
                                                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"/>
                                                 <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce [animation-delay:150ms]"/>
@@ -385,7 +821,9 @@ export const Chat = () => {
                             </span>
                         </div>) : (<textarea
                             rows={1}
+                            value={messageInput}
                             placeholder="Nhập câu hỏi..."
+                            ref={textareaRef}
                             onChange={(e) => {
                                 setMessageInput(e.target.value);
 
