@@ -54,6 +54,12 @@ public class ChatProcessController {
         return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
     }
 
+    @GetMapping("/query-message-by-id")
+    public ResponseEntity<BaseResponse<ChatMessage>> queryChatMessageById(@RequestParam String id){
+        BaseResponse<ChatMessage> response = chatProcessService.queryMessageById(id);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getMessage().getStatus()));
+    }
+
 
 
 }

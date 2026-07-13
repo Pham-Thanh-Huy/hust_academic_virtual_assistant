@@ -30,6 +30,7 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.web.bind.annotation.CrossOrigin;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
@@ -96,7 +97,7 @@ public class ChatProcessService {
                     .voiceAnswer(Function.convertMarkdownToVoice(request.getAnswer()))
                     .model(request.getModel())
                     .sequence(sequence + 1)
-                    .chatAt(LocalDateTime.now())
+                    .chatAt(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")))
                     .build();
             chatMessage = chatMessageRepository.save(chatMessage);
 
@@ -129,6 +130,21 @@ public class ChatProcessService {
 
             return BaseResponse.makeSuccessResponse(chatSessions);
         }catch (Exception e){
+            return BaseResponse.makeInternalServerError(e.getMessage());
+        }
+    }
+
+    public BaseResponse<ChatMessage> queryMessageById(String id){
+        try{
+            ChatMessage chatMessage = chatMessageRepository.findById(id).orElse(null);
+            if(ObjectUtils.isEmpty(chatMessage)){
+                return BaseResponse.makeBadRequestResponse("Không tồn tại message với id này");
+            }
+
+            return BaseResponse.makeSuccessResponse(chatMessage);
+
+        }catch (Exception e){
+            log.error("[ERROR-WHEN-QUERY-MESSAGE-BY-ID");
             return BaseResponse.makeInternalServerError(e.getMessage());
         }
     }
