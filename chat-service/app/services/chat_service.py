@@ -6,7 +6,7 @@ from pathlib import Path
 
 import httpx
 import requests
-from fastapi import WebSocket
+from fastapi import WebSocket, UploadFile
 from starlette.responses import StreamingResponse
 
 from app.config.load_env import Env
@@ -17,6 +17,7 @@ from app.utils.open_ai_util import init_open_ai, init_async_open_ai
 import aiofiles
 
 client = init_open_ai()
+async_client = init_async_open_ai()
 
 # GET ABSOLUTE PATH IN THIS FILE
 FILE_DIR = Path(__file__).absolute()
@@ -188,3 +189,16 @@ async def openai_tts_stream(voice_text: str):
             "event: error\n"
             f"data: {json.dumps({'message': str(e)})}\n\n"
         )
+
+
+async def speech_to_text(audio_file: UploadFile):
+    content = await audio_file.read()
+    transcript = await async_client.audio.transcriptions.create(
+        model="gpt-4o-mini-transcribe",
+        file=(
+            audio_file.filename,
+            content,
+            audio_file.content_type,
+        ),
+    )
+    return transcript
