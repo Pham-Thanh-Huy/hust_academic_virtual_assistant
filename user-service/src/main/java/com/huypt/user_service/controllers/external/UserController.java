@@ -9,10 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,6 +22,14 @@ public class UserController extends BaseController {
     @GetMapping("/get-user/{userId}")
     public ResponseEntity<CommonResponse<UserResponse>> getUser(@PathVariable Long userId){
         CommonResponse<UserResponse> response = userService.getUser(userId);
+        return baseControllerResponse(response);
+    }
+
+    @Operation(summary = "Lấy người dùng theo username")
+    @GetMapping("/get-user-by-username")
+    public ResponseEntity<CommonResponse<UserResponse>> getUserbyUsername(@RequestParam(name = "username", required = false)
+                                                                          String username){
+        CommonResponse<UserResponse> response = userService.getUserByUsername(username);
         return baseControllerResponse(response);
     }
 }
