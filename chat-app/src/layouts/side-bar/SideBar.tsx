@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import env from "../../config/env.ts";
+import Env from "../../config/env.ts";
 
 type Session = {
   id: string;
@@ -86,6 +87,10 @@ export const SideBar = ({ refreshSession, sessionId }: SideBarProps) => {
   const token = localStorage.getItem("token");
   const isLogin = Boolean(token);
 
+
+  const [username, setUsername] = useState("")
+  const [fullName, setFullName] = useState("")
+
   useEffect(() => {
     listSessionRef.current = listSession;
   }, [listSession]);
@@ -149,6 +154,7 @@ export const SideBar = ({ refreshSession, sessionId }: SideBarProps) => {
     [],
   );
 
+
   useEffect(() => {
     const refreshWasTriggered =
       refreshSession !== previousRefreshSessionRef.current;
@@ -166,6 +172,7 @@ export const SideBar = ({ refreshSession, sessionId }: SideBarProps) => {
     try {
       const decoded = jwtDecode<TokenPayload>(token);
       username = decoded.username?.trim() ?? "";
+      setUsername(username)
     } catch (error) {
       console.error("Không thể đọc username từ token", error);
       setListSession([]);
@@ -176,6 +183,29 @@ export const SideBar = ({ refreshSession, sessionId }: SideBarProps) => {
       setListSession([]);
       return;
     }
+
+    fetch(`${Env.API_URL}/user-service/api/v1/get-user-by-username?username=${username}`, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        Pragma: "no-cache",
+      },
+    })
+        .then((res) => res.json())
+        .then((data) => {
+          const firstName = data.data.firstName || "";
+          const lastName = data.data.lastName || "";
+
+          const fullName = `${lastName} ${firstName} `.trim();
+
+          setFullName(fullName);
+        })
+        .catch((error) => {
+          console.error("Get user info failed:", error);
+        });
 
     const controller = new AbortController();
     const requestVersion = ++requestVersionRef.current;
@@ -403,16 +433,16 @@ export const SideBar = ({ refreshSession, sessionId }: SideBarProps) => {
             <div className="flex items-center gap-3 min-w-0">
               <img
                 className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm"
-                src="/huy-test-logo.jpeg"
+                src="/avatar.jpg"
                 alt="avatar"
               />
 
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-gray-800 truncate">
-                  Phạm Thành Huy
+                  {fullName}
                 </div>
                 <div className="text-xs text-gray-500 truncate">
-                  huy.pt210154P@sis.hust.edu.vn
+                  {username}
                 </div>
               </div>
             </div>
